@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.db
+.env
+.env.local
+# Node
+node_modules/
+.next/
+out/
+# Editors
+.vscode/
+.idea/
+.DS_Store
+# Fixtures captured during dev
+backend/tests/fixtures/*.live.json
