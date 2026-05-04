@@ -3,11 +3,11 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import finnhub
-from anthropic import Anthropic
+from anthropic import AnthropicBedrock
 from app.config import settings
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
-_anthropic = Anthropic(api_key=settings.anthropic_api_key) if settings.anthropic_api_key else None
+_anthropic = AnthropicBedrock(**settings.bedrock_kwargs())
 
 def get_news(symbol: str, since_days: int = 7) -> dict:
     if settings.fixtures_mode:
@@ -21,11 +21,11 @@ def get_news(symbol: str, since_days: int = 7) -> dict:
         for i in items
     ]
     summary = ""
-    if _anthropic and items:
+    if items:
         joined = "\n".join(f"- {i['headline']}: {i['summary'][:200]}" for i in items)
         try:
             msg = _anthropic.messages.create(
-                model="claude-haiku-4-5-20251001", max_tokens=300,
+                model=settings.anthropic_haiku_model, max_tokens=300,
                 messages=[{"role": "user", "content": f"Summarize the market-moving themes for {symbol} in 3 bullets:\n{joined}"}],
             )
             summary = msg.content[0].text if msg.content else ""

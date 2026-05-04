@@ -49,13 +49,18 @@ cp .env.example .env
 
 | Variable | Description |
 |---|---|
-| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `AWS_REGION` | AWS region for Bedrock (default: `us-east-1`) |
+| `AWS_ACCESS_KEY_ID` | AWS access key (optional — uses boto3 default chain if unset) |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key |
+| `AWS_SESSION_TOKEN` | AWS session token (optional, for temporary credentials) |
 | `ALPACA_API_KEY` | Alpaca paper trading key |
 | `ALPACA_API_SECRET` | Alpaca paper trading secret |
 | `ALPACA_BASE_URL` | `https://paper-api.alpaca.markets` (default) |
 | `FINNHUB_API_KEY` | Finnhub API key (free tier works) |
 | `MAX_RISK_USD` | Max risk per trade in USD (default: 5000) |
 | `FIXTURES_MODE` | `1` to skip all external API calls (offline demo) |
+| `ANTHROPIC_MODEL` | Bedrock model ID for the agent (default: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`) |
+| `ANTHROPIC_HAIKU_MODEL` | Bedrock model ID for news summarization (default: `us.anthropic.claude-haiku-4-5-20251001-v1:0`) |
 
 ### 3. Frontend
 
