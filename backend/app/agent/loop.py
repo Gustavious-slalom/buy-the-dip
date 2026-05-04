@@ -1,4 +1,5 @@
 # backend/app/agent/loop.py
+import json
 from datetime import datetime, timezone
 from anthropic import AsyncAnthropic
 from app.config import settings
@@ -60,7 +61,7 @@ async def run_session(emit, session_id: str, user_message: str) -> None:
                 if tu.name == "propose_trade":
                     await emit(_evt("agent.proposal", **result))
                 tool_results.append({"type": "tool_result", "tool_use_id": tu.id,
-                                     "content": str(result)})
+                                     "content": json.dumps(result, default=str)})
             except Exception as e:
                 await emit(_evt("agent.tool_result",
                                 tool_use_id=tu.id, name=tu.name, output=None, error=str(e)))
@@ -70,3 +71,4 @@ async def run_session(emit, session_id: str, user_message: str) -> None:
         messages.append({"role": "user", "content": tool_results})
 
     await emit(_evt("agent.error", message="loop cap reached"))
+    return

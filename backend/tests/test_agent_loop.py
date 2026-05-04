@@ -67,6 +67,7 @@ def test_loop_emits_proposal(monkeypatch):
     assert "agent.thinking" in types          # deltas were emitted
     assert "agent.tool_call" in types
     assert "agent.proposal" in types
+    assert "agent.complete" in types          # loop exited cleanly on end_turn
     # All thinking events carry a `delta` field, not `text`.
     thinking = [e for e in emit.events if e["type"] == "agent.thinking"]
     assert all("delta" in e["data"] for e in thinking)
