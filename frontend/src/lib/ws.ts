@@ -7,6 +7,7 @@ export function useAgentSession() {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [status, setStatus] = useState<"idle"|"connecting"|"running"|"done"|"error">("idle");
   const ws = useRef<WebSocket | null>(null);
+  const lastSessionId = useRef<string | null>(null);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws";
@@ -15,6 +16,7 @@ export function useAgentSession() {
     socket.onopen = () => setStatus("idle");
     socket.onmessage = (m) => {
       const evt: AgentEvent = JSON.parse(m.data);
+      if ((evt as any).session_id) lastSessionId.current = (evt as any).session_id;
       setEvents(prev => [...prev, evt]);
       if (evt.type === "agent.proposal") setProposal(evt.data as Proposal);
       if (evt.type === "agent.complete") setStatus("done");
@@ -29,5 +31,12 @@ export function useAgentSession() {
     ws.current?.send(JSON.stringify({ type: "session.start", data: { ticker, idea } }));
   }, []);
 
-  return { events, proposal, status, sendIdea };
+  const sendReplay = useCallback((sid?: string) => {
+    const target = sid ?? lastSessionId.current;
+    if (!target) return;
+    setEvents([]); setStatus("running");
+    ws.current?.send(JSON.stringify({ type: "replay", data: { session_id: target } }));
+  }, []);
+
+  return { events, proposal, status, sendIdea, sendReplay };
 }
