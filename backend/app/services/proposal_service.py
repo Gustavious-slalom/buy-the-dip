@@ -26,9 +26,25 @@ def compute_risk_reward(legs: list[dict]) -> dict:
     if len(legs) == 2 and legs[0]["side"] == legs[1]["side"]:
         width = abs(legs[0]["strike"] - legs[1]["strike"])
         if net_debit > 0:  # debit spread
+            qty = longs[0]["qty"]
             long_strike = next(l["strike"] for l in longs)
             be = long_strike + net_debit if longs[0]["side"] == "call" else long_strike - net_debit
-            return {"max_risk": net_debit * 100, "max_reward": (width - net_debit) * 100, "breakeven": be}
+            return {
+                "max_risk": net_debit * 100,
+                "max_reward": (width * qty - net_debit) * 100,
+                "breakeven": be,
+            }
+        elif net_debit < 0:  # credit spread
+            net_credit = abs(net_debit)
+            qty = shorts[0]["qty"]
+            short_strike = next(l["strike"] for l in shorts)
+            be = (short_strike - net_credit if shorts[0]["side"] == "call"
+                  else short_strike + net_credit)
+            return {
+                "max_risk": (width * qty - net_credit) * 100,
+                "max_reward": net_credit * 100,
+                "breakeven": be,
+            }
     
     # Fallback
     return {"max_risk": abs(net_debit) * 100, "max_reward": None, "breakeven": None}
