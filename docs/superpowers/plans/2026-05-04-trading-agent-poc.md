@@ -80,7 +80,7 @@ All events are JSON `{ "type": "...", "session_id": "...", "ts": "...", "data": 
 |---|---|---|
 | `session.start` | C→S | `{ ticker?: string, idea?: string }` |
 | `agent.status` | S→C | `{ message: string }` ("Fetching quote…") |
-| `agent.thinking` | S→C | `{ text: string }` (streamed text deltas) |
+| `agent.thinking` | S→C | `{ delta: string }` (incremental token deltas — frontend appends in order) |
 | `agent.tool_call` | S→C | `{ tool_use_id, name, input }` |
 | `agent.tool_result` | S→C | `{ tool_use_id, name, output, error? }` |
 | `agent.proposal` | S→C | `{ proposal_id, summary, legs, max_risk, max_reward, breakeven, expiry, confidence, risks }` |
@@ -141,11 +141,11 @@ class Watchlist(SQLModel, table=True):
 `agent/loop.py` exposes `async def run_session(ws, session_id, user_message, db)`:
 
 1. Build messages list with cached system prompt + cached tool definitions (Anthropic prompt caching via `cache_control: {"type": "ephemeral"}` on system + last tool entry).
-2. Loop:
-   - Call `client.messages.stream(model="claude-sonnet-4-6", tools=TOOLS, messages=...)`.
-   - Stream text deltas → emit `agent.thinking`.
-   - On `tool_use` block: emit `agent.tool_call`, dispatch via `tools.dispatch(name, input)`, emit `agent.tool_result`. Append tool result to messages.
-   - On `end_turn` without tool use: break.
+2. Loop (uses `AsyncAnthropic` + `client.messages.stream(...)` for incremental delivery):
+   - Open a streaming context: `async with client.messages.stream(model=settings.anthropic_model, tools=TOOLS, messages=...) as stream`.
+   - For each text delta yielded by `stream.text_stream` → emit `agent.thinking` with the delta (NOT the full text). The frontend appends deltas to render token-by-token.
+   - When the stream finishes, call `await stream.get_final_message()` to inspect content blocks. For each `tool_use` block: emit `agent.tool_call`, dispatch via `tools.dispatch(name, input)`, emit `agent.tool_result`. Append tool results to messages.
+   - On `stop_reason == "end_turn"` without any tool use: break.
 3. If a `propose_trade` was called, the dispatch persists a `Proposal` row and emits `agent.proposal`.
 4. `execute_trade` is **not** registered with Claude. It's an HTTP/WS endpoint triggered only by `proposal.approve` from the UI.
 
@@ -900,13 +900,28 @@ git commit -m "feat(backend): agent tool definitions + safety test"
 
 ```python
 # backend/tests/test_agent_loop.py
-import asyncio, json
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import MagicMock, AsyncMock, patch
 from app.agent.loop import run_session
 
 class FakeEmit:
     def __init__(self): self.events = []
     async def __call__(self, evt): self.events.append(evt)
+
+def _make_stream(deltas: list[str], final_message):
+    """Builds an async context manager that mimics client.messages.stream(...)."""
+    async def text_stream_gen():
+        for d in deltas:
+            yield d
+
+    stream_obj = MagicMock()
+    stream_obj.text_stream = text_stream_gen()
+    stream_obj.get_final_message = AsyncMock(return_value=final_message)
+
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(return_value=stream_obj)
+    cm.__aexit__ = AsyncMock(return_value=False)
+    return cm
 
 def test_loop_emits_proposal(monkeypatch):
     monkeypatch.setenv("FIXTURES_MODE","1")
@@ -917,20 +932,39 @@ def test_loop_emits_proposal(monkeypatch):
     reload(alpaca_service); reload(news_service); reload(proposal_service); reload(tools)
     from app.db import init_db; init_db()
 
-    # Stub: claim Claude only calls propose_trade then ends
-    fake_response = MagicMock()
-    fake_response.stop_reason = "tool_use"
-    fake_response.content = [MagicMock(type="tool_use", id="t1", name="propose_trade",
-                                      input={"ticker":"AAPL","legs":[{"action":"buy","side":"call","qty":1,"strike":200,"premium":3.0,"contract_symbol":"AAPL250620C200"}],
-                                             "rationale":"bullish","confidence":0.7,"risks":["IV"],"expiry":"2025-06-20"})]
-    fake_end = MagicMock(stop_reason="end_turn", content=[MagicMock(type="text", text="done")])
-    with patch("app.agent.loop.Anthropic") as A:
+    # Turn 1: stream a few thinking deltas, then a propose_trade tool_use block.
+    final_1 = MagicMock(
+        stop_reason="tool_use",
+        content=[
+            MagicMock(type="text", text="Analyzing AAPL..."),
+            MagicMock(type="tool_use", id="t1", name="propose_trade",
+                      input={"ticker":"AAPL",
+                             "legs":[{"action":"buy","side":"call","qty":1,"strike":200,
+                                      "premium":3.0,"contract_symbol":"AAPL250620C200"}],
+                             "rationale":"bullish","confidence":0.7,"risks":["IV"],
+                             "expiry":"2025-06-20"}),
+        ],
+    )
+    # Turn 2: end_turn with a small text block.
+    final_2 = MagicMock(stop_reason="end_turn",
+                        content=[MagicMock(type="text", text="done")])
+
+    with patch("app.agent.loop.AsyncAnthropic") as A:
         client = A.return_value
-        client.messages.create.side_effect = [fake_response, fake_end]
+        client.messages.stream.side_effect = [
+            _make_stream(["Analyzing ", "AAPL..."], final_1),
+            _make_stream(["done"], final_2),
+        ]
         emit = FakeEmit()
         asyncio.run(run_session(emit, "s1", "analyze AAPL"))
+
     types = [e["type"] for e in emit.events]
-    assert "agent.tool_call" in types and "agent.proposal" in types
+    assert "agent.thinking" in types          # deltas were emitted
+    assert "agent.tool_call" in types
+    assert "agent.proposal" in types
+    # All thinking events carry a `delta` field, not `text`.
+    thinking = [e for e in emit.events if e["type"] == "agent.thinking"]
+    assert all("delta" in e["data"] for e in thinking)
 ```
 
 - [ ] **Step 2: Implement loop.py**
@@ -938,7 +972,7 @@ def test_loop_emits_proposal(monkeypatch):
 ```python
 # backend/app/agent/loop.py
 from datetime import datetime
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 from app.config import settings
 from app.agent.tools import TOOLS, dispatch
 from app.agent.prompts import SYSTEM_PROMPT
@@ -947,32 +981,46 @@ def _evt(type_: str, **data) -> dict:
     return {"type": type_, "ts": datetime.utcnow().isoformat(), "data": data}
 
 async def run_session(emit, session_id: str, user_message: str) -> None:
-    client = Anthropic(api_key=settings.anthropic_api_key)
+    client = AsyncAnthropic(api_key=settings.anthropic_api_key)
     messages = [{"role": "user", "content": user_message}]
     await emit(_evt("agent.status", message=f"Starting analysis for: {user_message}"))
 
-    cached_tools = [{**t, "cache_control": {"type": "ephemeral"}} if i == len(TOOLS)-1 else t for i, t in enumerate(TOOLS)]
+    cached_tools = [
+        {**t, "cache_control": {"type": "ephemeral"}} if i == len(TOOLS) - 1 else t
+        for i, t in enumerate(TOOLS)
+    ]
     cached_system = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
 
     for _ in range(12):  # safety cap
-        resp = client.messages.create(
-            model="claude-sonnet-4-6", max_tokens=2048,
-            system=cached_system, tools=cached_tools, messages=messages,
-        )
+        # Stream the assistant turn token-by-token so the UI renders in real time.
+        async with client.messages.stream(
+            model=settings.anthropic_model,
+            max_tokens=2048,
+            system=cached_system,
+            tools=cached_tools,
+            messages=messages,
+        ) as stream:
+            async for delta in stream.text_stream:
+                await emit(_evt("agent.thinking", delta=delta))
+            final = await stream.get_final_message()
+
         assistant_blocks = []
         tool_uses = []
-        for block in resp.content:
-            if getattr(block, "type", None) == "text":
-                await emit(_evt("agent.thinking", text=block.text))
+        for block in final.content:
+            btype = getattr(block, "type", None)
+            if btype == "text":
+                # Text already streamed as deltas above; keep the full block in history.
                 assistant_blocks.append({"type": "text", "text": block.text})
-            elif getattr(block, "type", None) == "tool_use":
-                await emit(_evt("agent.tool_call", tool_use_id=block.id, name=block.name, input=block.input))
+            elif btype == "tool_use":
+                await emit(_evt("agent.tool_call",
+                                tool_use_id=block.id, name=block.name, input=block.input))
                 tool_uses.append(block)
-                assistant_blocks.append({"type": "tool_use", "id": block.id, "name": block.name, "input": block.input})
+                assistant_blocks.append({"type": "tool_use", "id": block.id,
+                                         "name": block.name, "input": block.input})
 
         messages.append({"role": "assistant", "content": assistant_blocks})
 
-        if resp.stop_reason != "tool_use":
+        if final.stop_reason != "tool_use":
             await emit(_evt("agent.complete"))
             return
 
@@ -980,18 +1028,24 @@ async def run_session(emit, session_id: str, user_message: str) -> None:
         for tu in tool_uses:
             try:
                 result = await dispatch(tu.name, tu.input, session_id)
-                await emit(_evt("agent.tool_result", tool_use_id=tu.id, name=tu.name, output=result))
+                await emit(_evt("agent.tool_result",
+                                tool_use_id=tu.id, name=tu.name, output=result))
                 if tu.name == "propose_trade":
                     await emit(_evt("agent.proposal", **result))
-                tool_results.append({"type": "tool_result", "tool_use_id": tu.id, "content": str(result)})
+                tool_results.append({"type": "tool_result", "tool_use_id": tu.id,
+                                     "content": str(result)})
             except Exception as e:
-                await emit(_evt("agent.tool_result", tool_use_id=tu.id, name=tu.name, output=None, error=str(e)))
-                tool_results.append({"type": "tool_result", "tool_use_id": tu.id, "content": f"error: {e}", "is_error": True})
+                await emit(_evt("agent.tool_result",
+                                tool_use_id=tu.id, name=tu.name, output=None, error=str(e)))
+                tool_results.append({"type": "tool_result", "tool_use_id": tu.id,
+                                     "content": f"error: {e}", "is_error": True})
 
         messages.append({"role": "user", "content": tool_results})
 
     await emit(_evt("agent.error", message="loop cap reached"))
 ```
+
+> Note: `settings.anthropic_model` is read from env (`ANTHROPIC_MODEL`, default e.g. `claude-sonnet-4-5-20250929`). Add the field to `app/config.py` Settings.
 
 - [ ] **Step 3: Pass + commit**
 
@@ -1250,7 +1304,7 @@ git commit -m "feat(frontend): Next.js + shadcn scaffold"
 ```ts
 export type AgentEvent =
   | { type: "agent.status"; ts: string; session_id: string; data: { message: string } }
-  | { type: "agent.thinking"; ts: string; session_id: string; data: { text: string } }
+  | { type: "agent.thinking"; ts: string; session_id: string; data: { delta: string } }
   | { type: "agent.tool_call"; ts: string; session_id: string; data: { tool_use_id: string; name: string; input: any } }
   | { type: "agent.tool_result"; ts: string; session_id: string; data: { tool_use_id: string; name: string; output: any; error?: string } }
   | { type: "agent.proposal"; ts: string; session_id: string; data: Proposal }
@@ -1397,18 +1451,38 @@ import { Badge } from "@/components/ui/badge";
 
 export function AgentTrace() {
   const { events } = useSession();
+
+  // Collapse consecutive `agent.thinking` deltas into a single text block so the
+  // streamed tokens render as one growing paragraph instead of one bullet per token.
+  const grouped = events.reduce<Array<{ kind: "thinking"; ts: string; text: string } | { kind: "event"; ts: string; evt: typeof events[number] }>>((acc, e) => {
+    if (e.type === "agent.thinking") {
+      const last = acc[acc.length - 1];
+      const delta = (e as any).data.delta ?? "";
+      if (last && last.kind === "thinking") {
+        last.text += delta;
+      } else {
+        acc.push({ kind: "thinking", ts: e.ts, text: delta });
+      }
+    } else {
+      acc.push({ kind: "event", ts: e.ts, evt: e });
+    }
+    return acc;
+  }, []);
+
   return (
     <Card className="h-full">
       <CardHeader><CardTitle>Agent trace</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm overflow-auto max-h-[80vh]">
-        {events.map((e, i) => (
+        {grouped.map((g, i) => (
           <div key={i} className="border-l-2 pl-2 border-muted">
-            <Badge variant="outline" className="mr-2">{e.type.replace("agent.","")}</Badge>
-            <span className="text-muted-foreground text-xs">{new Date(e.ts).toLocaleTimeString()}</span>
+            <Badge variant="outline" className="mr-2">
+              {g.kind === "thinking" ? "thinking" : g.evt.type.replace("agent.", "")}
+            </Badge>
+            <span className="text-muted-foreground text-xs">{new Date(g.ts).toLocaleTimeString()}</span>
             <pre className="text-xs whitespace-pre-wrap mt-1">
-              {e.type === "agent.thinking" ? (e as any).data.text :
-               e.type === "agent.status" ? (e as any).data.message :
-               JSON.stringify((e as any).data, null, 2).slice(0, 600)}
+              {g.kind === "thinking" ? g.text :
+               g.evt.type === "agent.status" ? (g.evt as any).data.message :
+               JSON.stringify((g.evt as any).data, null, 2).slice(0, 600)}
             </pre>
           </div>
         ))}
