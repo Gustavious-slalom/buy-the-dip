@@ -29,29 +29,35 @@ def approve(body: ApproveBody):
         if p.max_risk > settings.max_risk_usd:
             raise HTTPException(400, "exceeds MAX_RISK_USD")
         legs = json.loads(p.legs_json)
+        alpaca_order_id = None
         try:
             order = alpaca_service.submit_multileg_order(legs)
+            alpaca_order_id = order["id"]
             p.status = "executed"
             ex = Execution(
                 id=str(uuid.uuid4()), proposal_id=p.id,
-                alpaca_order_id=order["id"],
+                alpaca_order_id=alpaca_order_id,
                 submitted_at=datetime.now(timezone.utc),
                 status=order["status"],
                 raw_response_json=order["raw"],
             )
             s.add(p); s.add(ex); s.commit()
-            return {"ok": True, "alpaca_order_id": order["id"], "status": order["status"]}
+            return {"ok": True, "alpaca_order_id": alpaca_order_id, "status": order["status"]}
         except HTTPException:
             raise
         except Exception as e:
             p.status = "failed"
             ex = Execution(
-                id=str(uuid.uuid4()), proposal_id=p.id, alpaca_order_id=None,
+                id=str(uuid.uuid4()), proposal_id=p.id,
+                alpaca_order_id=alpaca_order_id,  # preserve ID if order was submitted before DB error
                 submitted_at=datetime.now(timezone.utc), status="failed",
                 raw_response_json=str(e),
             )
             s.add(p); s.add(ex); s.commit()
-            raise HTTPException(500, f"execution failed: {e}")
+            detail = f"execution failed: {e}"
+            if alpaca_order_id:
+                detail += f" (WARNING: Alpaca order {alpaca_order_id} may be live)"
+            raise HTTPException(500, detail)
 
 @router.post("/proposals/reject")
 def reject(body: ApproveBody):

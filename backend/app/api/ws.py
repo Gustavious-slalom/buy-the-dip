@@ -21,14 +21,29 @@ async def ws(ws: WebSocket):
                 s.commit()
         while True:
             msg = await ws.receive_text()
-            data = json.loads(msg)
+            try:
+                data = json.loads(msg)
+            except json.JSONDecodeError:
+                await ws.send_text(json.dumps({"type": "error", "data": {"message": "invalid JSON"}}))
+                continue
             if data.get("type") == "session.start":
-                user_msg = data["data"].get("idea") or f"analyze {data['data'].get('ticker')}"
-                await run_session(emit, session_id, user_msg)
+                try:
+                    user_msg = data["data"].get("idea") or f"analyze {data['data'].get('ticker', '')}"
+                except (KeyError, TypeError):
+                    await ws.send_text(json.dumps({"type": "error", "data": {"message": "missing data field"}}))
+                    continue
+                try:
+                    await run_session(emit, session_id, user_msg)
+                except Exception as e:
+                    await ws.send_text(json.dumps({"type": "agent.error", "data": {"message": str(e)}}))
             elif data.get("type") == "replay":
-                from sqlmodel import select
-                sid = data["data"]["session_id"]
                 import asyncio
+                from sqlmodel import select
+                try:
+                    sid = data["data"]["session_id"]
+                except (KeyError, TypeError):
+                    await ws.send_text(json.dumps({"type": "error", "data": {"message": "missing session_id"}}))
+                    continue
                 with get_session() as s:
                     rows = s.exec(select(Trace).where(Trace.session_id == sid).order_by(Trace.ts)).all()
                 for r in rows:
