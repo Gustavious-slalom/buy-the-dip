@@ -30,6 +30,7 @@ def get_quote(symbol: str) -> dict:
 
 def get_options_chain(symbol: str, expiry: str | None = None) -> dict:
     if settings.fixtures_mode:
+        # Fixture is always AAPL data; symbol arg is intentionally ignored in offline mode
         return json.loads((FIXTURES / "aapl_chain.json").read_text())
     req = OptionChainRequest(underlying_symbol=symbol)
     snap = _option_data().get_option_chain(req)
@@ -41,7 +42,8 @@ def get_options_chain(symbol: str, expiry: str | None = None) -> dict:
         q = s.latest_quote
         contracts.append({
             "symbol": sym,
-            "strike": None,  # parse from sym in real call
+            # OCC format: 8 trailing digits encode strike (last 3 are cents)
+            "strike": int(sym[-8:]) / 1000,
             "side": "call" if "C" in sym[-9:] else "put",
             "bid": q.bid_price if q else None,
             "ask": q.ask_price if q else None,
@@ -56,7 +58,7 @@ def get_options_chain(symbol: str, expiry: str | None = None) -> dict:
 def get_greeks(contract_symbol: str) -> dict:
     if settings.fixtures_mode:
         return {"symbol": contract_symbol, "delta": 0.45, "gamma": 0.03, "theta": -0.05, "vega": 0.12, "iv": 0.28}
-    # alpaca-py exposes greeks via chain snapshots; simplified for PoC
+    # alpaca-py exposes greeks only via chain snapshots; call get_options_chain for per-contract greeks
     return {"symbol": contract_symbol, "delta": None, "gamma": None, "theta": None, "vega": None, "iv": None}
 
 def get_portfolio() -> dict:
@@ -76,6 +78,8 @@ def get_positions() -> list[dict]:
 def submit_multileg_order(legs: list[dict]) -> dict:
     """Caller MUST verify proposal status='approved' before invoking."""
     settings.assert_paper()
+    if settings.fixtures_mode:
+        return {"id": "fixture-order-00000000", "status": "accepted", "raw": "{}"}
     order_legs = [
         OptionLegRequest(
             symbol=l["contract_symbol"],
