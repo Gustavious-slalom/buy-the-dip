@@ -20,12 +20,12 @@ export function useAgentSession() {
       if (evt.type === "agent.complete") setStatus("done");
       if (evt.type === "agent.error") setStatus("error");
     };
-    socket.onclose = () => ws.current = null;
-    return () => socket.close();
+    socket.onclose = () => { ws.current = null; };
+    return () => { ws.current?.close(); ws.current = null; };
   }, []);
 
   const sendIdea = useCallback((ticker: string, idea?: string) => {
-    setEvents([]); setProposal(null); setStatus("running");
+    setEvents([]); setStatus("running"); // keep proposal visible until new one arrives
     ws.current?.send(JSON.stringify({ type: "session.start", data: { ticker, idea } }));
   }, []);
 

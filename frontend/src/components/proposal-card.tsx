@@ -38,7 +38,7 @@ export function ProposalCard() {
           <Button disabled={busy} onClick={async () => { setBusy(true); try { const r = await approveProposal(proposal.proposal_id); setResult(`Order submitted: ${r.alpaca_order_id} (${r.status})`); } catch(e:any){ setResult(`Error: ${e.message}`);} finally { setBusy(false);} }}>
             Approve
           </Button>
-          <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true); await rejectProposal(proposal.proposal_id); setResult("Rejected"); setBusy(false); }}>
+          <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true); try { await rejectProposal(proposal.proposal_id); setResult("Rejected"); } catch(e:any){ setResult(`Error: ${e.message}`); } finally { setBusy(false); } }}>
             Reject
           </Button>
         </div>
