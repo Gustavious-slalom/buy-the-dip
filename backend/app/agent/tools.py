@@ -1,4 +1,6 @@
 # backend/app/agent/tools.py
+import asyncio
+import functools
 from app.services import alpaca_service, news_service, proposal_service
 
 TOOLS = [
@@ -25,17 +27,40 @@ TOOLS = [
      },"required":["ticker","legs","rationale","expiry"]}},
 ]
 
+
+async def _run(fn, *args, **kwargs):
+    """Run a blocking function in a thread pool to avoid freezing the event loop."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, functools.partial(fn, *args, **kwargs))
+
+
 async def dispatch(name: str, input: dict, session_id: str) -> dict:
-    if name == "get_quote": return alpaca_service.get_quote(input["symbol"])
-    if name == "get_options_chain": return alpaca_service.get_options_chain(input["symbol"], input.get("expiry"))
-    if name == "get_greeks": return alpaca_service.get_greeks(input["contract_symbol"])
-    if name == "get_news": return news_service.get_news(input["symbol"], input.get("since_days", 7))
-    if name == "get_portfolio": return alpaca_service.get_portfolio()
-    if name == "get_positions": return {"positions": alpaca_service.get_positions()}
+    """Route a Claude tool call to the appropriate service.
+
+    All service calls are wrapped in run_in_executor so synchronous I/O
+    (Alpaca/Finnhub HTTP requests) does not block the asyncio event loop.
+    WS event emission (agent.tool_call / agent.tool_result) is handled
+    by loop.py — dispatch only returns the result dict.
+    """
+    if name == "get_quote":
+        return await _run(alpaca_service.get_quote, input["symbol"])
+    if name == "get_options_chain":
+        return await _run(alpaca_service.get_options_chain, input["symbol"], input.get("expiry"))
+    if name == "get_greeks":
+        return await _run(alpaca_service.get_greeks, input["contract_symbol"])
+    if name == "get_news":
+        return await _run(news_service.get_news, input["symbol"], input.get("since_days", 7))
+    if name == "get_portfolio":
+        return await _run(alpaca_service.get_portfolio)
+    if name == "get_positions":
+        positions = await _run(alpaca_service.get_positions)
+        return {"positions": positions}
     if name == "propose_trade":
-        return proposal_service.create_proposal(
-            session_id=session_id, ticker=input["ticker"], legs=input["legs"],
-            rationale=input["rationale"], confidence=input.get("confidence", 0.5),
-            risks=input.get("risks", []), expiry=input["expiry"],
+        return await _run(
+            proposal_service.create_proposal,
+            session_id, input["ticker"], input["legs"],
+            input["rationale"], input.get("confidence", 0.5),
+            input.get("risks", []), input["expiry"],
         )
     raise ValueError(f"unknown tool {name}")
+
