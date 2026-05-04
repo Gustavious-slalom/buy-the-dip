@@ -23,9 +23,12 @@ def get_news(symbol: str, since_days: int = 7) -> dict:
     summary = ""
     if _anthropic and items:
         joined = "\n".join(f"- {i['headline']}: {i['summary'][:200]}" for i in items)
-        msg = _anthropic.messages.create(
-            model="claude-haiku-4-5-20251001", max_tokens=300,
-            messages=[{"role": "user", "content": f"Summarize the market-moving themes for {symbol} in 3 bullets:\n{joined}"}],
-        )
-        summary = msg.content[0].text if msg.content else ""
+        try:
+            msg = _anthropic.messages.create(
+                model="claude-haiku-4-5-20251001", max_tokens=300,
+                messages=[{"role": "user", "content": f"Summarize the market-moving themes for {symbol} in 3 bullets:\n{joined}"}],
+            )
+            summary = msg.content[0].text if msg.content else ""
+        except Exception:
+            pass  # degrade gracefully — agent still gets raw news items
     return {"symbol": symbol, "items": items, "summary": summary}
