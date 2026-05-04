@@ -10,7 +10,8 @@ def _evt(type_: str, **data) -> dict:
     return {"type": type_, "ts": datetime.now(timezone.utc).isoformat(), "data": data}
 
 async def run_session(emit, session_id: str, user_message: str) -> None:
-    client = AsyncAnthropicBedrock(**settings.bedrock_kwargs())
+    # AWS_BEARER_TOKEN_BEDROCK is read automatically from the environment by the SDK
+    client = AsyncAnthropicBedrock(aws_region=settings.aws_region)
     messages = [{"role": "user", "content": user_message}]
     await emit(_evt("agent.status", message=f"Starting analysis for: {user_message}"))
 

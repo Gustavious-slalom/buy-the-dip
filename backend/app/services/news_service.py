@@ -7,7 +7,8 @@ from anthropic import AnthropicBedrock
 from app.config import settings
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
-_anthropic = AnthropicBedrock(**settings.bedrock_kwargs())
+# AWS_BEARER_TOKEN_BEDROCK is read automatically from the environment by the SDK
+_anthropic = AnthropicBedrock(aws_region=settings.aws_region)
 
 def get_news(symbol: str, since_days: int = 7) -> dict:
     if settings.fixtures_mode:
