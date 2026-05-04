@@ -1,6 +1,9 @@
 import json, uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException
+from alpaca.data.requests import StockBarsRequest
+from alpaca.data.timeframe import TimeFrame
+from alpaca.data.historical.stock import StockHistoricalDataClient
 from pydantic import BaseModel
 from sqlmodel import select
 from app.db import get_session
@@ -70,3 +73,11 @@ def reject(body: ApproveBody):
         p.status = "rejected"
         s.add(p); s.commit()
     return {"ok": True}
+
+@router.get("/bars/{symbol}")
+def bars(symbol: str, days: int = 30):
+    if settings.fixtures_mode:
+        return [{"t": (datetime.now(timezone.utc)-timedelta(days=i)).isoformat(), "c": 200 + i*0.5} for i in range(days,0,-1)]
+    c = StockHistoricalDataClient(settings.alpaca_api_key, settings.alpaca_api_secret)
+    res = c.get_stock_bars(StockBarsRequest(symbol_or_symbols=symbol, timeframe=TimeFrame.Day, start=datetime.now(timezone.utc)-timedelta(days=days)))
+    return [{"t": b.timestamp.isoformat(), "c": float(b.close)} for b in res[symbol]]
