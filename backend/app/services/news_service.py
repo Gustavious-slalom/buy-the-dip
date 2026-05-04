@@ -3,12 +3,11 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import finnhub
-from anthropic import AnthropicBedrock
+from anthropic import Anthropic
 from app.config import settings
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
-# AWS_BEARER_TOKEN_BEDROCK is read automatically from the environment by the SDK
-_anthropic = AnthropicBedrock(aws_region=settings.aws_region)
+_anthropic = Anthropic(api_key=settings.anthropic_api_key)
 
 def get_news(symbol: str, since_days: int = 7) -> dict:
     if settings.fixtures_mode:
