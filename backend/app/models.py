@@ -38,6 +38,27 @@ class Watchlist(SQLModel, table=True):
     ticker: str = Field(primary_key=True)
     added_at: datetime = Field(default_factory=_now)
 
+class SellRule(SQLModel, table=True):
+    symbol: str = Field(primary_key=True)
+    take_profit: float           # e.g. 0.01 → sell when gain >= 1%
+    stop_loss: float             # e.g. -0.003 → sell when loss <= -0.3%
+    qty: float | None = None     # None = close full position
+    active: bool = True
+    created_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
+
+class SellOrder(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    symbol: str
+    qty: float
+    trigger: str                   # "manual" | "take_profit" | "stop_loss"
+    avg_entry: float
+    trigger_price: float | None = None
+    alpaca_order_id: str | None = None
+    status: str                    # "submitted" | "filled" | "failed"
+    submitted_at: datetime = Field(default_factory=_now)
+    raw_response_json: str = ""
+
 class RecommendationRun(SQLModel, table=True):
     id: str = Field(primary_key=True)
     created_at: datetime = Field(default_factory=_now)

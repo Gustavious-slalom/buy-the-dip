@@ -101,7 +101,10 @@ def get_portfolio() -> dict:
 
 def get_positions() -> list[dict]:
     if settings.fixtures_mode:
-        return []
+        return [
+            {"symbol": "AAPL", "qty": 10.0, "avg_entry_price": 180.0},
+            {"symbol": "AAPL240119C00150000", "qty": 1.0, "avg_entry_price": 5.0},
+        ]
     return [
         {"symbol": p.symbol, "qty": float(p.qty), "avg_entry_price": float(p.avg_entry_price)}
         for p in _trading().get_all_positions()
@@ -159,6 +162,20 @@ def submit_multileg_order(legs: list[dict]) -> dict:
     req = MarketOrderRequest(
         qty=common, order_class=OrderClass.MLEG, time_in_force=TimeInForce.DAY,
         legs=order_legs,
+    )
+    order = _trading().submit_order(req)
+    return {"id": str(order.id), "status": str(order.status), "raw": order.model_dump_json()}
+
+def sell_stock_position(symbol: str, qty: float) -> dict:
+    """Submit a DAY market sell order for `qty` shares of a stock (paper only)."""
+    settings.assert_paper()
+    if settings.fixtures_mode:
+        return {"id": f"fixture-sell-{symbol}", "status": "accepted", "raw": "{}"}
+    req = MarketOrderRequest(
+        symbol=symbol,
+        qty=qty,
+        side=OrderSide.SELL,
+        time_in_force=TimeInForce.DAY,
     )
     order = _trading().submit_order(req)
     return {"id": str(order.id), "status": str(order.status), "raw": order.model_dump_json()}

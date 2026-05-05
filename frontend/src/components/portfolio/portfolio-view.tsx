@@ -70,6 +70,7 @@ export function PortfolioView() {
         positions={snap?.positions ?? []}
         loading={loading && !snap}
         error={hasError(snap, "positions_unavailable")}
+        onRefresh={refresh}
       />
 
       <HistoryTable
