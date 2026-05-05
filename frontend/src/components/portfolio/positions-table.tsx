@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import type { Position } from "@/types/portfolio";
 import type { SellRule } from "@/types/sell";
 import { fmtUsd, fmtPct } from "@/lib/utils";
@@ -70,8 +70,8 @@ export function PositionsTable({ positions, loading, error, onRefresh }: Props) 
               const plColor = (p.unrealized_pl ?? 0) > 0 ? "var(--up)" : (p.unrealized_pl ?? 0) < 0 ? "var(--down)" : "var(--fg)";
               const isStock = p.kind === "stock";
               return (
-                <>
-                  <tr key={p.symbol} className="border-t border-[color:var(--hairline)]">
+                <Fragment key={p.symbol}>
+                  <tr className="border-t border-[color:var(--hairline)]">
                     <td className="py-1.5 truncate max-w-[180px]">{p.symbol}</td>
                     <td className="text-[color:var(--fg-dim)]">{p.kind}</td>
                     <td className="num text-right">{p.qty}</td>
@@ -85,7 +85,6 @@ export function PositionsTable({ positions, loading, error, onRefresh }: Props) 
                         <SellButton
                           symbol={p.symbol}
                           qty={p.qty}
-                          avg_entry={p.avg_entry}
                           onSold={onRefresh}
                         />
                       )}
@@ -107,7 +106,7 @@ export function PositionsTable({ positions, loading, error, onRefresh }: Props) 
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>

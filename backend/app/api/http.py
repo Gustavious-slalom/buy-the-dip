@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from alpaca.data.historical.stock import StockHistoricalDataClient
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlmodel import select
 from app.db import get_session
 from app.models import Proposal, Execution
@@ -104,7 +104,7 @@ def portfolio_equity_curve(period: str = "1M"):
 class SellBody(BaseModel):
     symbol: str
     qty: float
-    avg_entry: float
+    # avg_entry is NOT accepted from clients — derived server-side from broker position
 
 
 class SellRuleBody(BaseModel):
@@ -113,11 +113,37 @@ class SellRuleBody(BaseModel):
     stop_loss: float = -0.003    # default -0.3%
     qty: float | None = None
 
+    @field_validator("take_profit")
+    @classmethod
+    def tp_must_be_positive(cls, v: float) -> float:
+        if v <= 0 or v > 1:
+            raise ValueError("take_profit must be > 0 and <= 1 (100%)")
+        return v
+
+    @field_validator("stop_loss")
+    @classmethod
+    def sl_must_be_negative(cls, v: float) -> float:
+        if v >= 0 or v < -1:
+            raise ValueError("stop_loss must be < 0 and >= -1 (-100%)")
+        return v
+
+    @field_validator("qty")
+    @classmethod
+    def qty_must_be_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("qty must be positive")
+        return v
+
 
 @router.post("/positions/sell")
 def sell_position(body: SellBody):
     try:
-        return sell_service.sell_position(body.symbol, body.qty, body.avg_entry)
+        # Validate against broker positions and derive avg_entry server-side
+        pos = sell_service._validate_stock_sell(body.symbol, body.qty)
+        avg_entry = float(pos["avg_entry_price"])
+        return sell_service.sell_position(body.symbol, body.qty, avg_entry)
+    except sell_service.SellValidationError as e:
+        raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, str(e))
 

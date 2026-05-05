@@ -5,11 +5,10 @@ import { sellPosition } from "@/lib/sell-api";
 type Props = {
   symbol: string;
   qty: number;
-  avg_entry: number;
   onSold: () => void;
 };
 
-export function SellButton({ symbol, qty, avg_entry, onSold }: Props) {
+export function SellButton({ symbol, qty, onSold }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +17,10 @@ export function SellButton({ symbol, qty, avg_entry, onSold }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await sellPosition(symbol, qty, avg_entry);
+      await sellPosition(symbol, qty);
       setConfirming(false);
+      // Emit shared invalidation event so any listener can refresh portfolio data
+      window.dispatchEvent(new CustomEvent("portfolio:invalidate"));
       onSold();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sell failed");

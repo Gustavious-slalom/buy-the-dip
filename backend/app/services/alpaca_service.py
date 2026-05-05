@@ -101,7 +101,10 @@ def get_portfolio() -> dict:
 
 def get_positions() -> list[dict]:
     if settings.fixtures_mode:
-        return []
+        return [
+            {"symbol": "AAPL", "qty": 10.0, "avg_entry_price": 180.0},
+            {"symbol": "AAPL240119C00150000", "qty": 1.0, "avg_entry_price": 5.0},
+        ]
     return [
         {"symbol": p.symbol, "qty": float(p.qty), "avg_entry_price": float(p.avg_entry_price)}
         for p in _trading().get_all_positions()

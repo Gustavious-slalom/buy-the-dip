@@ -43,23 +43,28 @@ async def check_thresholds_once() -> list[dict]:
 
         if pct_change >= rule.take_profit:
             log.info("take_profit triggered %s pct=%.4f", rule.symbol, pct_change)
+            # Atomically claim the rule before broker submission to prevent
+            # duplicate orders if multiple workers evaluate the same rule.
+            if not sell_service.try_deactivate_rule(rule.symbol):
+                log.info("rule %s already claimed by another worker, skipping", rule.symbol)
+                continue
             result = sell_service.sell_position(
                 rule.symbol, qty, avg_entry,
                 trigger="take_profit",
                 trigger_price=price,
             )
-            # Deactivate rule after firing to prevent double-sell
-            sell_service.delete_rule(rule.symbol)
             triggered.append(result)
         elif pct_change <= rule.stop_loss:
             log.info("stop_loss triggered %s pct=%.4f", rule.symbol, pct_change)
+            # Atomically claim the rule before broker submission
+            if not sell_service.try_deactivate_rule(rule.symbol):
+                log.info("rule %s already claimed by another worker, skipping", rule.symbol)
+                continue
             result = sell_service.sell_position(
                 rule.symbol, qty, avg_entry,
                 trigger="stop_loss",
                 trigger_price=price,
             )
-            # Deactivate rule after firing to prevent double-sell
-            sell_service.delete_rule(rule.symbol)
             triggered.append(result)
 
     return triggered

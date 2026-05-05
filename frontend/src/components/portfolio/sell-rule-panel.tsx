@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SellRule } from "@/types/sell";
 import { setSellRule, deleteSellRule } from "@/lib/sell-api";
 import { fmtPct } from "@/lib/utils";
@@ -16,6 +16,14 @@ export function SellRulePanel({ symbol, rule, onRuleChange }: Props) {
   const [sl, setSl] = useState(rule ? String(Math.abs(rule.stop_loss) * 100) : "0.3");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync input state when rule changes (e.g. loaded asynchronously after mount)
+  useEffect(() => {
+    if (rule) {
+      setTp(String(rule.take_profit * 100));
+      setSl(String(Math.abs(rule.stop_loss) * 100));
+    }
+  }, [rule]);
 
   const isActive = rule?.active === true;
 
@@ -66,7 +74,7 @@ export function SellRulePanel({ symbol, rule, onRuleChange }: Props) {
         <span>{open ? "▾" : "▸"}</span>
         {isActive ? (
           <span className="text-[color:var(--up)]">
-            Auto rules: +{fmtPct(rule!.take_profit)} / {fmtPct(rule!.stop_loss)}
+            Auto rules: +{fmtPct(rule!.take_profit * 100)} / -{fmtPct(Math.abs(rule!.stop_loss) * 100)}
           </span>
         ) : (
           <span>Set auto rules</span>

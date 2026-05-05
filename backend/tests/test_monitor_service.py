@@ -12,6 +12,14 @@ def use_fixtures_mode(monkeypatch):
     from app.services import sell_service; reload(sell_service)
     from app.services import monitor_service; reload(monitor_service)
     from app.db import init_db; init_db()
+    # Clear sell-related state between tests to prevent cross-test contamination
+    from app.db import get_session
+    from app.models import SellRule, SellOrder
+    from sqlmodel import delete
+    with get_session() as s:
+        s.exec(delete(SellRule))
+        s.exec(delete(SellOrder))
+        s.commit()
 
 
 def test_check_thresholds_no_rules():
@@ -86,3 +94,32 @@ def test_check_thresholds_skips_options(monkeypatch):
     ])
     result = asyncio.run(check_thresholds_once())
     assert result == []
+
+
+def test_check_thresholds_no_duplicate_on_second_poll(monkeypatch):
+    """Rule deactivated before broker submission: a second poll must not fire again."""
+    from app.services import sell_service, alpaca_service
+    from app.services.monitor_service import check_thresholds_once
+
+    broker_call_count = {"n": 0}
+
+    def counting_sell(symbol, qty):
+        broker_call_count["n"] += 1
+        return {"id": f"fixture-sell-{symbol}", "status": "accepted", "raw": "{}"}
+
+    sell_service.set_rule("AAPL", take_profit=0.01, stop_loss=-0.003)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [
+        {"symbol": "AAPL", "qty": 10.0, "avg_entry_price": 100.0}
+    ])
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"AAPL": 102.0})
+    monkeypatch.setattr(alpaca_service, "sell_stock_position", counting_sell)
+
+    # First poll: rule fires and is deactivated before broker submission
+    result1 = asyncio.run(check_thresholds_once())
+    assert len(result1) == 1
+    assert broker_call_count["n"] == 1
+
+    # Second poll: rule is already inactive — broker must NOT be called again
+    result2 = asyncio.run(check_thresholds_once())
+    assert result2 == []
+    assert broker_call_count["n"] == 1  # still 1, not 2

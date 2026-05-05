@@ -16,12 +16,11 @@ async function parseError(r: Response): Promise<string> {
 export async function sellPosition(
   symbol: string,
   qty: number,
-  avg_entry: number,
 ): Promise<SellOrder> {
   const r = await fetch(`${BASE}/positions/sell`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ symbol, qty, avg_entry }),
+    body: JSON.stringify({ symbol, qty }),
   });
   if (!r.ok) throw new Error(await parseError(r));
   return r.json();
