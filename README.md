@@ -128,3 +128,5 @@ pnpm build         # production build
 | `/proposals/approve` | POST | Execute paper trade |
 | `/proposals/reject` | POST | Reject proposal |
 | `/bars/{symbol}` | GET | 30-day price bars (OHLC) |
+| `/portfolio/snapshot` | GET | Account + positions + strategies + allocations + history |
+| `/portfolio/equity-curve?period=1D\|1W\|1M\|3M\|ALL` | GET | Equity over time |
