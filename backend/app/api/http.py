@@ -10,6 +10,7 @@ from app.db import get_session
 from app.models import Proposal, Execution
 from app.config import settings
 from app.services import alpaca_service
+from app.services import portfolio_service
 
 router = APIRouter()
 
@@ -81,3 +82,16 @@ def bars(symbol: str, days: int = 30):
     c = StockHistoricalDataClient(settings.alpaca_api_key, settings.alpaca_api_secret)
     res = c.get_stock_bars(StockBarsRequest(symbol_or_symbols=symbol, timeframe=TimeFrame.Day, start=datetime.now(timezone.utc)-timedelta(days=days)))
     return [{"t": b.timestamp.isoformat(), "c": float(b.close)} for b in res[symbol]]
+
+
+@router.get("/portfolio/snapshot")
+def portfolio_snapshot():
+    return portfolio_service.build_snapshot()
+
+
+@router.get("/portfolio/equity-curve")
+def portfolio_equity_curve(period: str = "1M"):
+    try:
+        return portfolio_service.get_equity_curve(period)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
