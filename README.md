@@ -124,10 +124,11 @@ pnpm build         # production build
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/ws` | WS | Agent session stream + replay |
+| `/ws` | WS | Agent session stream + replay; recommendation streaming via `recommendation.start` |
 | `/proposals` | GET | List all proposals |
 | `/proposals/approve` | POST | Execute paper trade |
 | `/proposals/reject` | POST | Reject proposal |
 | `/bars/{symbol}` | GET | 30-day price bars (OHLC) |
 | `/portfolio/snapshot` | GET | Account + positions + strategies + allocations + history |
 | `/portfolio/equity-curve?period=1D\|1W\|1M\|3M\|ALL` | GET | Equity over time |
+| `/recommendations/latest` | GET | Most recent persisted recommendation run |

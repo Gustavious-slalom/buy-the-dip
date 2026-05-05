@@ -20,3 +20,16 @@ def test_proposal_roundtrip(tmp_path, monkeypatch):
         s.add(p); s.commit()
         got = s.get(Proposal, p.id)
     assert got.ticker == "AAPL" and got.status == "pending"
+
+
+def test_recommendation_run_roundtrip(db_session):
+    from app.models import RecommendationRun
+    import uuid, json
+    r = RecommendationRun(
+        id=str(uuid.uuid4()),
+        payload_json=json.dumps({"cards": [], "sources": {"watchlist": [], "positions": [], "discover": []}}),
+    )
+    db_session.add(r); db_session.commit(); db_session.refresh(r)
+    assert r.id is not None
+    assert r.created_at is not None
+    assert json.loads(r.payload_json)["cards"] == []

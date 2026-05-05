@@ -12,6 +12,7 @@ from app.config import settings
 from app.services import alpaca_service
 from app.services import portfolio_service
 from app.services import sell_service
+from app.services import recommendation_service
 
 router = APIRouter()
 
@@ -136,3 +137,16 @@ def delete_sell_rule(symbol: str):
 @router.get("/positions/rules")
 def list_sell_rules():
     return [r.model_dump() for r in sell_service.list_rules()]
+
+
+@router.get("/recommendations/latest")
+def recommendations_latest():
+    latest = recommendation_service.get_latest_run()
+    if latest is None:
+        return {
+            "run_id": None,
+            "generated_at": None,
+            "cards": [],
+            "sources": {"watchlist": [], "positions": [], "discover": []},
+        }
+    return latest

@@ -58,3 +58,8 @@ class SellOrder(SQLModel, table=True):
     status: str                    # "submitted" | "filled" | "failed"
     submitted_at: datetime = Field(default_factory=_now)
     raw_response_json: str = ""
+
+class RecommendationRun(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    created_at: datetime = Field(default_factory=_now)
+    payload_json: str
