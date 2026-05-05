@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 import type { EquityCurve as EC, Period } from "@/types/portfolio";
 import { getEquityCurve } from "@/lib/api";
@@ -14,33 +14,42 @@ export function EquityCurve() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track mount state so neither the period-change effect nor the invalidation
+  // callback can call setState after the component has unmounted.
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
     getEquityCurve(period)
       .then(d => {
-        if (!cancelled) setData(d);
+        if (!cancelled && mountedRef.current) setData(d);
       })
       .catch(e => {
-        if (!cancelled) setError(String(e?.message ?? e));
+        if (!cancelled && mountedRef.current) setError(String(e?.message ?? e));
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && mountedRef.current) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [period]);
 
+  // Refetch triggered by portfolio:invalidate event. The mountedRef guard prevents
+  // setData/setLoading calls if the component unmounts before the fetch resolves.
   const refetch = useCallback(() => {
-    let cancelled = false;
+    if (!mountedRef.current) return;
     setLoading(true);
     setError(null);
     getEquityCurve(period)
-      .then(d => { if (!cancelled) { setData(d); setLoading(false); } })
-      .catch((e: Error) => { if (!cancelled) { setError(e.message); setLoading(false); } });
-    return () => { cancelled = true; };
+      .then(d => { if (mountedRef.current) { setData(d); setLoading(false); } })
+      .catch((e: Error) => { if (mountedRef.current) { setError(e.message); setLoading(false); } });
   }, [period]);
   usePortfolioInvalidate(refetch);
 
@@ -71,7 +80,10 @@ export function EquityCurve() {
       {error ? (
         <div className="text-[12px] text-[color:var(--down)]">Couldn’t load equity curve — {error}</div>
       ) : loading || !data ? (
-        <div className="text-[12px] text-[color:var(--fg-mute)] font-mono">loading…</div>
+        <div className="animate-pulse space-y-2">
+          <div className="h-5 w-24 rounded bg-[color:var(--hairline)]" />
+          <div className="h-[200px] rounded bg-[color:var(--hairline)]" />
+        </div>
       ) : data.points.length === 0 ? (
         <div className="text-[12px] text-[color:var(--fg-mute)] font-mono">No data for {period}.</div>
       ) : (

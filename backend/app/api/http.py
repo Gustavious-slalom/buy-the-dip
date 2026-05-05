@@ -85,8 +85,8 @@ def bars(symbol: str, days: int = 30):
 
 
 @router.get("/portfolio/snapshot")
-def portfolio_snapshot():
-    return portfolio_service.build_snapshot()
+def portfolio_snapshot(history_limit: int = 20):
+    return portfolio_service.build_snapshot(history_limit=history_limit)
 
 
 @router.get("/portfolio/equity-curve")

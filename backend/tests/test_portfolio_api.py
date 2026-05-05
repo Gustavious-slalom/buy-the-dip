@@ -37,3 +37,24 @@ def test_portfolio_equity_curve_endpoint(client):
 def test_portfolio_equity_curve_bad_period(client):
     r = client.get("/portfolio/equity-curve", params={"period": "BOGUS"})
     assert r.status_code == 400
+
+
+def test_fixture_mode_snapshot_end_to_end(client):
+    """Exercises the fixture-mode code paths without patching any alpaca_service methods.
+    If a fixture file is missing, misnamed, or contains malformed JSON this test will fail,
+    providing early warning that fixture mode is broken before a demo or CI run.
+    """
+    r = client.get("/portfolio/snapshot")
+    assert r.status_code == 200
+    body = r.json()
+    assert {"fetched_at", "account", "positions", "strategies", "allocations", "history", "errors"}.issubset(body.keys())
+    # In fixture mode get_portfolio() returns hardcoded data; get_positions() returns []
+    assert body["account"]["equity"] == 100000.0
+    assert body["errors"] == []
+
+
+def test_fixture_mode_snapshot_history_limit(client):
+    """Verify the history_limit query param is accepted and respected."""
+    r = client.get("/portfolio/snapshot", params={"history_limit": 5})
+    assert r.status_code == 200
+    assert len(r.json()["history"]) <= 5

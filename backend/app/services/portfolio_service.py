@@ -34,11 +34,18 @@ def _compute_allocations(positions: list[dict], account: dict) -> dict:
     return {"by_kind": by_kind, "by_underlying": by_underlying}
 
 
+# Minimum length of a valid OCC option symbol (underlying + 6-char date + C/P + 8-char strike)
+OCC_MIN_LEN = 15
+
 def _parse_occ(symbol: str) -> dict | None:
-    """Parse OCC option symbol. Returns None for non-options (length < 15)."""
-    if len(symbol) < 15:
+    """Parse OCC option symbol. Returns None for non-options (length < OCC_MIN_LEN)."""
+    if len(symbol) < OCC_MIN_LEN:
         return None
-    # Last 8 chars: strike (3 implied decimals). Char before: C/P. Six chars before that: YYMMDD.
+    # OCC symbol layout (right-anchored):
+    #   symbol[:-15]   — underlying ticker  (1–6 chars, e.g. "AAPL")
+    #   symbol[-15:-9] — expiry YYMMDD      (6 chars)
+    #   symbol[-9]     — option type        ('C' = call, 'P' = put)
+    #   symbol[-8:]    — strike * 1000      (8 digits; last 3 represent cents)
     strike = int(symbol[-8:]) / 1000.0
     side = "call" if symbol[-9] == "C" else "put"
     yymmdd = symbol[-15:-9]
@@ -65,6 +72,9 @@ def _normalize_positions(raw: list[dict], prices: dict[str, float | None], accou
             mv = pl = pct = None
         else:
             mv = round(cur * qty * multiplier, 2)
+            # unrealized_pl is direction-naive: it measures raw price-change value
+            # assuming a long position (qty always positive from Alpaca).
+            # _group_strategies applies sign * unrealized_pl to correct for short legs.
             pl = round((cur - avg_entry) * qty * multiplier, 2)
             pct = round((mv / equity) * 100.0, 4) if equity > 0 else 0.0
         pos = {
@@ -133,6 +143,11 @@ def _group_strategies(positions: list[dict]) -> list[dict]:
             if sym not in pos_by_sym:
                 continue
             held_pos = pos_by_sym[sym]
+            # sign accounts for position direction: +1 for long legs, -1 for short legs.
+            # Position-level market_value and unrealized_pl are direction-naive (long-assumed),
+            # so sign * value correctly reflects each leg's contribution to strategy P/L.
+            # e.g. a short leg whose price fell has unrealized_pl < 0 at position level;
+            #      sign(-1) * negative = positive, correctly showing it as a gain.
             sign = 1 if l["action"] == "buy" else -1
             mv = held_pos.get("market_value")
             if mv is not None:
@@ -174,7 +189,7 @@ def _build_history(limit: int = 20) -> list[dict]:
         return out
 
 
-def build_snapshot() -> dict:
+def build_snapshot(history_limit: int = 20) -> dict:
     """Return a PortfolioSnapshot. Partial failures captured in `errors` rather than raised."""
     errors: list[str] = []
     account: dict = {"cash": None, "equity": None, "buying_power": None, "day_pl": None, "day_pl_pct": None}
@@ -211,7 +226,7 @@ def build_snapshot() -> dict:
 
     history: list[dict] = []
     try:
-        history = _build_history()
+        history = _build_history(history_limit)
     except Exception:
         errors.append("history_unavailable")
 

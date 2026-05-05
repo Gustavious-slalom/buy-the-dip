@@ -193,6 +193,32 @@ def test_group_strategies_no_match(seeded_proposals):
     assert _group_strategies(positions) == []
 
 
+def test_group_strategies_profitable_short_leg(seeded_proposals):
+    """A short leg where the price has fallen (profitable for the seller) must contribute
+    positively to the strategy P/L. Position-level unrealized_pl is direction-naive
+    (price_change * qty * multiplier, assuming long), so _group_strategies must apply
+    sign * unrealized_pl: sign(-1) * negative = positive contribution."""
+    from app.services.portfolio_service import _group_strategies
+    positions = [
+        # Long call: bought at 12.40, now at 13.00 — unrealized_pl = +60 (price up = gain for long)
+        {"symbol": "NVDA260619C00800000", "kind": "option", "qty": 1.0, "avg_entry": 12.40, "current_price": 13.00,
+         "market_value": 1300.0, "unrealized_pl": 60.0, "underlying": "NVDA", "side": "call", "strike": 800.0, "expiry": "2026-06-19"},
+        # Short call: sold at 8.20, now at 6.00 — unrealized_pl = -220 (price fell; direction-naive shows as loss)
+        # Correct strategy contribution: sign(-1) * (-220) = +220 (price drop is a gain for the short seller)
+        {"symbol": "NVDA260619C00850000", "kind": "option", "qty": 1.0, "avg_entry": 8.20, "current_price": 6.00,
+         "market_value": 600.0, "unrealized_pl": -220.0, "underlying": "NVDA", "side": "call", "strike": 850.0, "expiry": "2026-06-19"},
+    ]
+    groups = _group_strategies(positions)
+    assert len(groups) == 1
+    g = groups[0]
+    # cost_basis: buy 1240 - sell 820 = 420 debit
+    assert g["cost_basis"] == pytest.approx(420.0)
+    # current_value: long MV(1300) - short MV(600) = 700
+    assert g["current_value"] == pytest.approx(700.0)
+    # unrealized_pl: (+1)*60 + (-1)*(-220) = 60 + 220 = 280
+    assert g["unrealized_pl"] == pytest.approx(280.0)
+
+
 def test_build_snapshot_fixtures_mode(seeded_proposals, monkeypatch):
     monkeypatch.setenv("FIXTURES_MODE", "1")
     from app.services import alpaca_service, portfolio_service
