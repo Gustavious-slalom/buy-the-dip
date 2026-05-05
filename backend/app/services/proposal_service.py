@@ -2,6 +2,7 @@ import uuid
 import json
 from app.db import get_session
 from app.models import Proposal
+from app.config import settings
 
 
 def compute_risk_reward(legs: list[dict]) -> dict:
@@ -22,8 +23,11 @@ def compute_risk_reward(legs: list[dict]) -> dict:
         be = l["strike"] + l["premium"] if l["side"] == "call" else l["strike"] - l["premium"]
         return {"max_risk": l["premium"] * 100 * l["qty"], "max_reward": None, "breakeven": be}
     
-    # Vertical spread (same side, different strikes)
+    # Vertical spread (same side, different strikes, equal quantities)
     if len(legs) == 2 and legs[0]["side"] == legs[1]["side"]:
+        # Ratio spreads (unequal quantities) have complex/unlimited risk — use safe fallback
+        if longs and shorts and longs[0]["qty"] != shorts[0]["qty"]:
+            return {"max_risk": abs(net_debit) * 100, "max_reward": None, "breakeven": None}
         width = abs(legs[0]["strike"] - legs[1]["strike"])
         if net_debit > 0:  # debit spread
             qty = longs[0]["qty"]
@@ -58,6 +62,10 @@ def create_proposal(session_id: str, ticker: str, legs: list[dict], rationale: s
     Returns a dict with proposal_id and computed risk/reward metrics.
     """
     rr = compute_risk_reward(legs)
+    if rr["max_risk"] is not None and rr["max_risk"] > settings.max_risk_usd:
+        raise ValueError(
+            f"Proposal max_risk ${rr['max_risk']:.2f} exceeds MAX_RISK_USD ${settings.max_risk_usd:.2f}"
+        )
     pid = str(uuid.uuid4())
     p = Proposal(
         id=pid,
