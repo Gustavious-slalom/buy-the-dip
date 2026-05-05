@@ -319,3 +319,40 @@ def test_get_latest_run_empty(monkeypatch):
     monkeypatch.setattr(recommendation_service, "get_session", fake_session)
 
     assert recommendation_service.get_latest_run() is None
+
+
+def test_build_market_brief_user_message_includes_quotes_and_news():
+    from app.agent.recommendation_prompt import build_market_brief_user_message
+    msg = build_market_brief_user_message(
+        index_quotes={"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30},
+        news_items=[
+            {"headline": "CPI cooler than expected", "summary": "Inflation eases."},
+            {"headline": "OPEC announces output cut", "summary": "Oil up 3%."},
+        ],
+    )
+    assert "SPY" in msg and "482.55" in msg
+    assert "QQQ" in msg and "IWM" in msg
+    assert "CPI cooler than expected" in msg
+    assert "OPEC announces output cut" in msg
+    assert "JSON" in msg
+
+
+def test_build_market_brief_user_message_handles_missing_inputs():
+    from app.agent.recommendation_prompt import build_market_brief_user_message
+    msg = build_market_brief_user_message(
+        index_quotes={"SPY": None, "QQQ": None, "IWM": None},
+        news_items=[],
+    )
+    assert "no recent news" in msg.lower() or "no news" in msg.lower()
+    assert "JSON" in msg
+
+
+def test_market_brief_system_prompt_specifies_schema():
+    from app.agent.recommendation_prompt import MARKET_BRIEF_SYSTEM_PROMPT
+    assert "JSON" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bias" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "headline" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "drivers" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bullish" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bearish" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "neutral" in MARKET_BRIEF_SYSTEM_PROMPT
