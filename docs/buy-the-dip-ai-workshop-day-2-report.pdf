@@ -1,0 +1,1193 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 2366 >>
+stream
+0.965 0.975 0.985 rg
+0.965 0.975 0.985 RG
+0.00 0.00 612.00 792.00 re f
+1.000 1.000 1.000 rg
+1.000 1.000 1.000 RG
+40.00 72.00 532.00 648.00 re f
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+0.80 w 40.00 72.00 532.00 648.00 re S
+0.050 0.200 0.100 rg
+0.050 0.200 0.100 RG
+BT /F2 16.00 Tf 70.00 660.00 Td (BUY THE DIP) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 32.00 Tf 70.00 620.00 Td (AI Workshop Day 2) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 32.00 Tf 70.00 586.00 Td (Project Report) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+1.20 w 70.00 560.00 m 542.00 560.00 l S
+0.180 0.220 0.280 rg
+0.180 0.220 0.280 RG
+BT /F1 13.00 Tf 70.00 530.00 Td (A Claude-powered options trading copilot built with FastAPI,) Tj ET
+0.180 0.220 0.280 rg
+0.180 0.220 0.280 RG
+BT /F1 13.00 Tf 70.00 512.00 Td (Next.js, Alpaca paper trading, and a human-in-the-loop) Tj ET
+0.180 0.220 0.280 rg
+0.180 0.220 0.280 RG
+BT /F1 13.00 Tf 70.00 494.00 Td (approval model.) Tj ET
+0.940 0.980 0.950 rg
+0.940 0.980 0.950 RG
+70.00 395.00 472.00 92.00 re f
+0.650 0.760 0.680 rg
+0.650 0.760 0.680 RG
+0.80 w 70.00 395.00 472.00 92.00 re S
+0.050 0.200 0.100 rg
+0.050 0.200 0.100 RG
+BT /F2 9.50 Tf 88.00 462.00 Td (Workshop context:) Tj ET
+0.170 0.220 0.180 rg
+0.170 0.220 0.180 RG
+BT /F1 9.50 Tf 190.00 462.00 Td (Second day of an AI workshop; focus on turning an idea into a working demo.) Tj ET
+0.050 0.200 0.100 rg
+0.050 0.200 0.100 RG
+BT /F2 9.50 Tf 88.00 438.00 Td (Core idea:) Tj ET
+0.170 0.220 0.180 rg
+0.170 0.220 0.180 RG
+BT /F1 9.50 Tf 190.00 438.00 Td (An agent analyzes a ticker, proposes an options trade, and streams its process live.) Tj ET
+0.050 0.200 0.100 rg
+0.050 0.200 0.100 RG
+BT /F2 9.50 Tf 88.00 414.00 Td (Safety invariant:) Tj ET
+0.170 0.220 0.180 rg
+0.170 0.220 0.180 RG
+BT /F1 9.50 Tf 190.00 414.00 Td (The agent cannot execute trades; the user must approve each paper order.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 10.50 Tf 70.00 130.00 Td (Prepared for workshop judges and reviewers) Tj ET
+0.360 0.400 0.450 rg
+0.360 0.400 0.450 RG
+BT /F3 9.00 Tf 70.00 112.00 Td (Repository: github.com/Gustavious-slalom/buy-the-dip) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (1) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 8205 >>
+stream
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 732.00 Td (Executive Summary) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 709.00 m 558.00 709.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 693.00 Td (Buy the Dip is a two-day proof-of-concept trading platform created during an AI workshop.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 679.00 Td (The project demonstrates how an LLM-powered agent can combine market data, portfolio) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 665.00 Td (context, news, options chains, and a human approval workflow to produce observable) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 651.00 Td (paper-trade proposals.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 633.00 Td (By Day 2, the project has moved beyond a prompt or mockup: it has a FastAPI backend, a) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 619.00 Td (Next.js dashboard, a streaming WebSocket agent trace, Alpaca paper-trading integration,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 605.00 Td (SQLite persistence, replay support, and a new portfolio composition view for account health,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 591.00 Td (positions, allocations, strategies, and equity history.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 576.00 m
+59.50 576.83 58.83 577.50 58.00 577.50 c
+57.17 577.50 56.50 576.83 56.50 576.00 c
+56.50 575.17 57.17 574.50 58.00 574.50 c
+58.83 574.50 59.50 575.17 59.50 576.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 573.00 Td (The project is intentionally scoped for a hackathon-style demo: single-user, local-first, paper) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 560.00 Td (trading only, fixtures for offline fallback, and clear safety boundaries.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 548.00 m
+59.50 548.83 58.83 549.50 58.00 549.50 c
+57.17 549.50 56.50 548.83 56.50 548.00 c
+56.50 547.17 57.17 546.50 58.00 546.50 c
+58.83 546.50 59.50 547.17 59.50 548.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 545.00 Td (The strongest demo moment is transparency: judges can watch the agent call tools, reason) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 532.00 Td (about market context, create a proposal, and wait for explicit human approval before) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 519.00 Td (execution.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 11.50 Tf 54.00 504.00 Td (PROJECT GOALS) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 489.00 m
+59.50 489.83 58.83 490.50 58.00 490.50 c
+57.17 490.50 56.50 489.83 56.50 489.00 c
+56.50 488.17 57.17 487.50 58.00 487.50 c
+58.83 487.50 59.50 488.17 59.50 489.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 486.00 Td (Show a practical AI-agent workflow rather than a static chatbot.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 474.00 m
+59.50 474.83 58.83 475.50 58.00 475.50 c
+57.17 475.50 56.50 474.83 56.50 474.00 c
+56.50 473.17 57.17 472.50 58.00 472.50 c
+58.83 472.50 59.50 473.17 59.50 474.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 471.00 Td (Use real trading primitives: quotes, options chains, Greeks, news, portfolio state, and order) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 458.00 Td (submission.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 446.00 m
+59.50 446.83 58.83 447.50 58.00 447.50 c
+57.17 447.50 56.50 446.83 56.50 446.00 c
+56.50 445.17 57.17 444.50 58.00 444.50 c
+58.83 444.50 59.50 445.17 59.50 446.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 443.00 Td (Keep execution safe by separating proposal generation from paper-order submission.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 431.00 m
+59.50 431.83 58.83 432.50 58.00 432.50 c
+57.17 432.50 56.50 431.83 56.50 431.00 c
+56.50 430.17 57.17 429.50 58.00 429.50 c
+58.83 429.50 59.50 430.17 59.50 431.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 428.00 Td (Create a polished dashboard that makes the agent observable and reviewable.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 416.00 m
+59.50 416.83 58.83 417.50 58.00 417.50 c
+57.17 417.50 56.50 416.83 56.50 416.00 c
+56.50 415.17 57.17 414.50 58.00 414.50 c
+58.83 414.50 59.50 415.17 59.50 416.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 413.00 Td (Make the demo resilient with SQLite traces, replay, fixtures mode, and local deployment.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 398.00 Td (Technology Stack) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 375.00 m 558.00 375.00 l S
+0.920 0.950 0.980 rg
+0.920 0.950 0.980 RG
+54.00 337.00 504.00 22.00 re f
+0.720 0.760 0.820 rg
+0.720 0.760 0.820 RG
+0.80 w 54.00 337.00 504.00 22.00 re S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 59.00 345.00 Td (Layer) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 137.00 345.00 Td (What was used) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 307.00 345.00 Td (Why it mattered) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 315.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 323.00 Td (Backend) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 323.00 Td (Python, FastAPI, SQLModel, SQLite) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 323.00 Td (Fast async API, WebSockets, finance ecosystem, low...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 293.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 301.00 Td (Frontend) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 301.00 Td (Next.js, React, TypeScript, Tail...) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 301.00 Td (Fast dashboard iteration with typed components) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 271.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 279.00 Td (Charts) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 279.00 Td (Recharts) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 279.00 Td (Price and portfolio visuals without heavy custom c...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 249.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 257.00 Td (Agent) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 257.00 Td (Claude Sonnet + Haiku models) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 257.00 Td (Tool-use loop, streaming analysis, lower-cost seco...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 227.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 235.00 Td (Market data) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 235.00 Td (Alpaca paper trading) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 235.00 Td (Quotes, options, account data, and safe paper exec...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 205.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 213.00 Td (News) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 137.00 213.00 Td (Finnhub) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 307.00 213.00 Td (Recent company news for sentiment/context) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 193.00 Td (Architecture) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 170.00 m 558.00 170.00 l S
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (2) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 9068 >>
+stream
+0.940 0.980 0.950 rg
+0.940 0.980 0.950 RG
+54.00 676.00 150.00 42.00 re f
+0.350 0.620 0.420 rg
+0.350 0.620 0.420 RG
+0.80 w 54.00 676.00 150.00 42.00 re S
+0.050 0.200 0.100 rg
+0.050 0.200 0.100 RG
+BT /F2 10.00 Tf 67.00 702.00 Td (Next.js Dashboard) Tj ET
+0.220 0.320 0.240 rg
+0.220 0.320 0.240 RG
+BT /F1 8.30 Tf 67.00 688.00 Td (React + TypeScript UI) Tj ET
+0.940 0.960 1.000 rg
+0.940 0.960 1.000 RG
+279.00 676.00 150.00 42.00 re f
+0.350 0.480 0.700 rg
+0.350 0.480 0.700 RG
+0.80 w 279.00 676.00 150.00 42.00 re S
+0.080 0.180 0.360 rg
+0.080 0.180 0.360 RG
+BT /F2 10.00 Tf 292.00 702.00 Td (FastAPI Agent Host) Tj ET
+0.220 0.290 0.420 rg
+0.220 0.290 0.420 RG
+BT /F1 8.30 Tf 292.00 688.00 Td (Claude tool loop + WS) Tj ET
+0.350 0.420 0.520 rg
+0.350 0.420 0.520 RG
+1.20 w 204.00 697.00 m 279.00 697.00 l S
+0.300 0.340 0.400 rg
+0.300 0.340 0.400 RG
+BT /F3 8.00 Tf 224.00 707.00 Td (WebSocket stream) Tj ET
+0.990 0.960 0.900 rg
+0.990 0.960 0.900 RG
+54.00 602.00 150.00 42.00 re f
+0.700 0.500 0.220 rg
+0.700 0.500 0.220 RG
+0.80 w 54.00 602.00 150.00 42.00 re S
+0.120 0.130 0.150 rg
+0.120 0.130 0.150 RG
+BT /F2 9.50 Tf 67.00 628.00 Td (Alpaca Paper) Tj ET
+0.340 0.340 0.360 rg
+0.340 0.340 0.360 RG
+BT /F1 7.40 Tf 67.00 614.00 Td (quotes, chains, portfolio, orders) Tj ET
+0.550 0.600 0.660 rg
+0.550 0.600 0.660 RG
+0.80 w 354.00 676.00 m 129.00 644.00 l S
+0.960 0.940 0.990 rg
+0.960 0.940 0.990 RG
+229.00 602.00 150.00 42.00 re f
+0.500 0.400 0.680 rg
+0.500 0.400 0.680 RG
+0.80 w 229.00 602.00 150.00 42.00 re S
+0.120 0.130 0.150 rg
+0.120 0.130 0.150 RG
+BT /F2 9.50 Tf 242.00 628.00 Td (Finnhub) Tj ET
+0.340 0.340 0.360 rg
+0.340 0.340 0.360 RG
+BT /F1 7.40 Tf 242.00 614.00 Td (news + sentiment context) Tj ET
+0.550 0.600 0.660 rg
+0.550 0.600 0.660 RG
+0.80 w 354.00 676.00 m 304.00 644.00 l S
+0.960 0.960 0.960 rg
+0.960 0.960 0.960 RG
+404.00 602.00 150.00 42.00 re f
+0.560 0.560 0.560 rg
+0.560 0.560 0.560 RG
+0.80 w 404.00 602.00 150.00 42.00 re S
+0.120 0.130 0.150 rg
+0.120 0.130 0.150 RG
+BT /F2 9.50 Tf 417.00 628.00 Td (SQLite) Tj ET
+0.340 0.340 0.360 rg
+0.340 0.340 0.360 RG
+BT /F1 7.40 Tf 417.00 614.00 Td (proposals, traces, replay) Tj ET
+0.550 0.600 0.660 rg
+0.550 0.600 0.660 RG
+0.80 w 354.00 676.00 m 479.00 644.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 578.00 Td (The system is split into two runnable processes: a Next.js dashboard and a FastAPI backend.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 564.00 Td (The browser starts an analysis session over WebSocket, receives streamed agent events,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 550.00 Td (then calls REST endpoints to approve or reject pending proposals.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 532.00 Td (The backend hosts the Claude tool loop and service adapters. It calls Alpaca for market) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 518.00 Td (and account data, Finnhub for news, and SQLite for proposals, executions, traces,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 504.00 Td (watchlists, portfolio history joins, and replayable agent sessions.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 489.00 m
+59.50 489.83 58.83 490.50 58.00 490.50 c
+57.17 490.50 56.50 489.83 56.50 489.00 c
+56.50 488.17 57.17 487.50 58.00 487.50 c
+58.83 487.50 59.50 488.17 59.50 489.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 486.00 Td (WebSocket: /ws streams agent.status, agent.thinking, agent.tool_call, agent.tool_result,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 473.00 Td (agent.proposal, agent.complete, and agent.error events.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 461.00 m
+59.50 461.83 58.83 462.50 58.00 462.50 c
+57.17 462.50 56.50 461.83 56.50 461.00 c
+56.50 460.17 57.17 459.50 58.00 459.50 c
+58.83 459.50 59.50 460.17 59.50 461.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 458.00 Td (REST: /proposals, /proposals/approve, /proposals/reject, /bars/{symbol}, /portfolio/snapshot,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 445.00 Td (and /portfolio/equity-curve.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 433.00 m
+59.50 433.83 58.83 434.50 58.00 434.50 c
+57.17 434.50 56.50 433.83 56.50 433.00 c
+56.50 432.17 57.17 431.50 58.00 431.50 c
+58.83 431.50 59.50 432.17 59.50 433.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 430.00 Td (Startup safety: the backend asserts Alpaca is configured for paper trading before serving) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 417.00 Td (requests.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 402.00 Td (Backend Build) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 379.00 m 558.00 379.00 l S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 11.50 Tf 54.00 363.00 Td (FASTAPI APPLICATION SHELL) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 345.00 Td (The FastAPI app initializes settings, creates database tables, enables CORS for the local) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 331.00 Td (dashboard, and mounts WebSocket and HTTP routers. The backend is deliberately small and) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 317.00 Td (local-friendly so a workshop team can run it quickly.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 11.50 Tf 54.00 299.00 Td (AGENT LOOP) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 281.00 Td (The agent loop uses Anthropic streaming messages with tool definitions and a system prompt.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 267.00 Td (It streams text deltas to the UI as agent.thinking, dispatches tool calls asynchronously,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 253.00 Td (emits tool results, and stops after a fixed 12-iteration cap to avoid runaway loops.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 11.50 Tf 54.00 235.00 Td (TOOLS EXPOSED TO CLAUDE) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 220.00 m
+59.50 220.83 58.83 221.50 58.00 221.50 c
+57.17 221.50 56.50 220.83 56.50 220.00 c
+56.50 219.17 57.17 218.50 58.00 218.50 c
+58.83 218.50 59.50 219.17 59.50 220.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 217.00 Td (get_quote\(symbol\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 205.00 m
+59.50 205.83 58.83 206.50 58.00 206.50 c
+57.17 206.50 56.50 205.83 56.50 205.00 c
+56.50 204.17 57.17 203.50 58.00 203.50 c
+58.83 203.50 59.50 204.17 59.50 205.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 202.00 Td (get_options_chain\(symbol, expiry\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 190.00 m
+59.50 190.83 58.83 191.50 58.00 191.50 c
+57.17 191.50 56.50 190.83 56.50 190.00 c
+56.50 189.17 57.17 188.50 58.00 188.50 c
+58.83 188.50 59.50 189.17 59.50 190.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 187.00 Td (get_greeks\(contract_symbol\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 175.00 m
+59.50 175.83 58.83 176.50 58.00 176.50 c
+57.17 176.50 56.50 175.83 56.50 175.00 c
+56.50 174.17 57.17 173.50 58.00 173.50 c
+58.83 173.50 59.50 174.17 59.50 175.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 172.00 Td (get_news\(symbol, since_days\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 160.00 m
+59.50 160.83 58.83 161.50 58.00 161.50 c
+57.17 161.50 56.50 160.83 56.50 160.00 c
+56.50 159.17 57.17 158.50 58.00 158.50 c
+58.83 158.50 59.50 159.17 59.50 160.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 157.00 Td (get_portfolio\(\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 145.00 m
+59.50 145.83 58.83 146.50 58.00 146.50 c
+57.17 146.50 56.50 145.83 56.50 145.00 c
+56.50 144.17 57.17 143.50 58.00 143.50 c
+58.83 143.50 59.50 144.17 59.50 145.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 142.00 Td (get_positions\(\)) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 130.00 m
+59.50 130.83 58.83 131.50 58.00 131.50 c
+57.17 131.50 56.50 130.83 56.50 130.00 c
+56.50 129.17 57.17 128.50 58.00 128.50 c
+58.83 128.50 59.50 129.17 59.50 130.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 127.00 Td (propose_trade\(legs, rationale, risks, expiry\)) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 112.00 Td (Notably, execute_trade is not exposed as an agent tool. The agent can create a pending) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 98.00 Td (proposal, but execution belongs to the REST approval path controlled by the user interface.) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 8772 >>
+stream
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 732.00 Td (Safety and Human Approval) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 709.00 m 558.00 709.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 693.00 Td (The most important product decision is the safety invariant: the LLM does not submit) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 679.00 Td (orders. A proposal is stored as pending, displayed in the UI with rationale and risk, and) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 665.00 Td (only then can the user approve or reject it.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 650.00 m
+59.50 650.83 58.83 651.50 58.00 651.50 c
+57.17 651.50 56.50 650.83 56.50 650.00 c
+56.50 649.17 57.17 648.50 58.00 648.50 c
+58.83 648.50 59.50 649.17 59.50 650.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 647.00 Td (Approval endpoint checks that the proposal exists and is still pending.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 635.00 m
+59.50 635.83 58.83 636.50 58.00 636.50 c
+57.17 636.50 56.50 635.83 56.50 635.00 c
+56.50 634.17 57.17 633.50 58.00 633.50 c
+58.83 633.50 59.50 634.17 59.50 635.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 632.00 Td (Approval rejects trades above MAX_RISK_USD.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 620.00 m
+59.50 620.83 58.83 621.50 58.00 621.50 c
+57.17 621.50 56.50 620.83 56.50 620.00 c
+56.50 619.17 57.17 618.50 58.00 618.50 c
+58.83 618.50 59.50 619.17 59.50 620.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 617.00 Td (Execution uses Alpaca paper trading and records an Execution row with order status and raw) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 604.00 Td (response.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 592.00 m
+59.50 592.83 58.83 593.50 58.00 593.50 c
+57.17 593.50 56.50 592.83 56.50 592.00 c
+56.50 591.17 57.17 590.50 58.00 590.50 c
+58.83 590.50 59.50 591.17 59.50 592.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 589.00 Td (Rejection changes proposal status without touching Alpaca.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 577.00 m
+59.50 577.83 58.83 578.50 58.00 578.50 c
+57.17 578.50 56.50 577.83 56.50 577.00 c
+56.50 576.17 57.17 575.50 58.00 575.50 c
+58.83 575.50 59.50 576.17 59.50 577.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 574.00 Td (Failures are surfaced as errors and persisted as failed execution attempts when relevant.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 559.00 Td (Frontend Build) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 536.00 m 558.00 536.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 520.00 Td (The Next.js frontend is organized around a live terminal-style dashboard. The trading page) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 506.00 Td (uses a three-column layout: ticker input and portfolio summary on the left,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 492.00 Td (proposal/charts/options chain in the center, and the agent trace on the right.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 477.00 m
+59.50 477.83 58.83 478.50 58.00 478.50 c
+57.17 478.50 56.50 477.83 56.50 477.00 c
+56.50 476.17 57.17 475.50 58.00 475.50 c
+58.83 475.50 59.50 476.17 59.50 477.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 474.00 Td (TickerInput starts an agent session and supports replaying a stored trace.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 462.00 m
+59.50 462.83 58.83 463.50 58.00 463.50 c
+57.17 463.50 56.50 462.83 56.50 462.00 c
+56.50 461.17 57.17 460.50 58.00 460.50 c
+58.83 460.50 59.50 461.17 59.50 462.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 459.00 Td (AgentTrace renders streamed thinking, tool calls, and tool results so the AI process is) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 446.00 Td (visible.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 434.00 m
+59.50 434.83 58.83 435.50 58.00 435.50 c
+57.17 435.50 56.50 434.83 56.50 434.00 c
+56.50 433.17 57.17 432.50 58.00 432.50 c
+58.83 432.50 59.50 433.17 59.50 434.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 431.00 Td (ProposalCard presents legs, expiry, confidence, max risk, max reward, breakeven, rationale,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 418.00 Td (risks, and Approve/Reject actions.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 406.00 m
+59.50 406.83 58.83 407.50 58.00 407.50 c
+57.17 407.50 56.50 406.83 56.50 406.00 c
+56.50 405.17 57.17 404.50 58.00 404.50 c
+58.83 404.50 59.50 405.17 59.50 406.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 403.00 Td (PriceChart and OptionsChainTable turn tool results into market context for the proposed) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 390.00 Td (trade.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 378.00 m
+59.50 378.83 58.83 379.50 58.00 379.50 c
+57.17 379.50 56.50 378.83 56.50 378.00 c
+56.50 377.17 57.17 376.50 58.00 376.50 c
+58.83 376.50 59.50 377.17 59.50 378.00 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 375.00 Td (StatusRail adds the workshop-ready terminal aesthetic and navigation between Trade and) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 362.00 Td (Portfolio.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 347.00 Td (Day 2 Portfolio Work) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 324.00 m 558.00 324.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 308.00 Td (The second workshop day expanded the project from a trade-proposal demo into a broader) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 294.00 Td (trading platform surface. The new /portfolio route gives judges a snapshot of what the) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 280.00 Td (paper account contains and how agent-generated trades show up after approval.) Tj ET
+0.920 0.950 0.980 rg
+0.920 0.950 0.980 RG
+54.00 240.00 504.00 22.00 re f
+0.720 0.760 0.820 rg
+0.720 0.760 0.820 RG
+0.80 w 54.00 240.00 504.00 22.00 re S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 59.00 248.00 Td (Area) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 153.00 248.00 Td (Day 2 addition) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 218.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 226.00 Td (Route) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 226.00 Td (/portfolio page linked from the top status rail) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 196.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 204.00 Td (Backend) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 204.00 Td (portfolio_service.py aggregates Alpaca account/positions with local proposals) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 174.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 182.00 Td (API) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 182.00 Td (/portfolio/snapshot and /portfolio/equity-curve?period=...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 152.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 160.00 Td (Components) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 160.00 Td (Account summary, equity curve, allocation card, strategies list, positions table, ...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 130.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 138.00 Td (State refresh) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 138.00 Td (Manual refresh and automatic portfolio invalidation after approve/reject) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 108.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 116.00 Td (Offline support) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 153.00 116.00 Td (Fixture-backed portfolio history for demo resilience) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (4) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 7092 >>
+stream
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 732.00 Td (The portfolio view groups open option positions back to executed proposals where possible.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 718.00 Td (This makes multi-leg strategies understandable to reviewers instead of presenting each) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 704.00 Td (option leg as an isolated line item.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 686.00 Td (Data Model and Persistence) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 663.00 m 558.00 663.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 647.00 Td (SQLite is used because the workshop goal is a reliable PoC, not production infrastructure.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 633.00 Td (SQLModel provides simple typed models while keeping setup lightweight.) Tj ET
+0.920 0.950 0.980 rg
+0.920 0.950 0.980 RG
+54.00 593.00 504.00 22.00 re f
+0.720 0.760 0.820 rg
+0.720 0.760 0.820 RG
+0.80 w 54.00 593.00 504.00 22.00 re S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 59.00 601.00 Td (Model) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 159.00 601.00 Td (Purpose) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 571.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 579.00 Td (Proposal) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 159.00 579.00 Td (Pending/executed/rejected/failed trade ideas with legs, risk, reward, rationale, ...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 549.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 557.00 Td (Execution) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 159.00 557.00 Td (Alpaca paper order submission result linked to a proposal) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 527.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 535.00 Td (Trace) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 159.00 535.00 Td (Every streamed agent event for replay and auditability) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 505.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 513.00 Td (Watchlist) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 159.00 513.00 Td (Seeded symbols such as AAPL, NVDA, and SPY) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 493.00 Td (Trace persistence is especially valuable for a workshop demo: even if a live market-data) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 479.00 Td (API has a hiccup, the team can replay a previously captured agent session and still) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 465.00 Td (demonstrate the end-to-end UX.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 447.00 Td (AI Workshop Creation Timeline) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 424.00 m 558.00 424.00 l S
+0.920 0.950 0.980 rg
+0.920 0.950 0.980 RG
+54.00 386.00 504.00 22.00 re f
+0.720 0.760 0.820 rg
+0.720 0.760 0.820 RG
+0.80 w 54.00 386.00 504.00 22.00 re S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 59.00 394.00 Td (Phase) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+BT /F2 8.30 Tf 154.00 394.00 Td (What was created) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 364.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 372.00 Td (Day 1 AM) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 154.00 372.00 Td (Core architecture, FastAPI backend, Anthropic tool loop, Alpaca service adapters, ...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 342.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 350.00 Td (Day 1 PM) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 154.00 350.00 Td (WebSocket streaming, Next.js dashboard, trace UI, proposal approval flow, charts/o...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 320.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 328.00 Td (Day 2 AM) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 154.00 328.00 Td (Portfolio composition design and backend aggregation: account, positions, allocati...) Tj ET
+0.820 0.850 0.900 rg
+0.820 0.850 0.900 RG
+0.50 w 54.00 298.00 504.00 22.00 re S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 59.00 306.00 Td (Day 2 PM) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 8.20 Tf 154.00 306.00 Td (Portfolio UI polish, status-rail navigation, invalidation after approve/reject, do...) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 286.00 Td (AI assistance was used as an accelerator for planning, decomposition, implementation) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 272.00 Td (sequencing, and code generation. The project benefited from pairing AI-generated structure) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 258.00 Td (with human decisions about scope, safety, and what would make the demo understandable.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 240.00 Td (Demo Script for Judges) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 217.00 m 558.00 217.00 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 201.00 Td (1. Start backend and frontend locally. If keys or network access are unreliable, enable fixture) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 187.80 Td (mode.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 170.60 Td (2. Open the dashboard and enter a ticker such as NVDA.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 153.40 Td (3. Narrate the live agent trace: quote, news, options chain, portfolio, positions, proposal.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 136.20 Td (4. Show the proposal card: legs, expiry, confidence, max risk, max reward, breakeven, rationale,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 123.00 Td (and risks.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 105.80 Td (5. Approve the paper trade and point out that approval happens outside the LLM tool loop.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 88.60 Td (6. Navigate to Portfolio and show account summary, equity curve, allocation, grouped strategies,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 75.40 Td (positions, and history.) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (5) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 6560 >>
+stream
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.80 Tf 54.00 732.00 Td (7. Use Replay Last if a live API hiccup happens during presentation.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 714.80 Td (Validation and Current Status) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 691.80 m 558.00 691.80 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 675.80 Td (The repository includes backend pytest coverage for models, proposal services, Alpaca) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 661.80 Td (service behavior, news service behavior, agent loop/tooling, portfolio API, and portfolio) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 647.80 Td (aggregation helpers. The frontend includes TypeScript and production build scripts.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 632.80 m
+59.50 633.63 58.83 634.30 58.00 634.30 c
+57.17 634.30 56.50 633.63 56.50 632.80 c
+56.50 631.97 57.17 631.30 58.00 631.30 c
+58.83 631.30 59.50 631.97 59.50 632.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 629.80 Td (Backend tests exercise allocation math, OCC option parsing, position normalization, strategy) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 616.80 Td (grouping, partial failure handling, and equity-curve period validation.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 604.80 m
+59.50 605.63 58.83 606.30 58.00 606.30 c
+57.17 606.30 56.50 605.63 56.50 604.80 c
+56.50 603.97 57.17 603.30 58.00 603.30 c
+58.83 603.30 59.50 603.97 59.50 604.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 601.80 Td (Frontend checks include pnpm tsc --noEmit and pnpm build as the main validation path.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 589.80 m
+59.50 590.63 58.83 591.30 58.00 591.30 c
+57.17 591.30 56.50 590.63 56.50 589.80 c
+56.50 588.97 57.17 588.30 58.00 588.30 c
+58.83 588.30 59.50 588.97 59.50 589.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 586.80 Td (The README documents setup, environment variables, offline fixture mode, seed data, tests,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 573.80 Td (and the five-minute demo flow.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 558.80 Td (Current project status: a functional workshop PoC with the key safety, observability, and) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 544.80 Td (portfolio-review pieces in place. The remaining work is production hardening, richer) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 530.80 Td (broker/error handling, authentication if needed, and deeper trading analytics beyond the) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 516.80 Td (PoC scope.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 498.80 Td (Recommended Next Steps) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 475.80 m 558.00 475.80 l S
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 462.80 m
+59.50 463.63 58.83 464.30 58.00 464.30 c
+57.17 464.30 56.50 463.63 56.50 462.80 c
+56.50 461.97 57.17 461.30 58.00 461.30 c
+58.83 461.30 59.50 461.97 59.50 462.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 459.80 Td (Record a fallback demo video using fixture mode and one successful replay trace.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 447.80 m
+59.50 448.63 58.83 449.30 58.00 449.30 c
+57.17 449.30 56.50 448.63 56.50 447.80 c
+56.50 446.97 57.17 446.30 58.00 446.30 c
+58.83 446.30 59.50 446.97 59.50 447.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 444.80 Td (Tighten visual polish around empty/error states before presenting.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 432.80 m
+59.50 433.63 58.83 434.30 58.00 434.30 c
+57.17 434.30 56.50 433.63 56.50 432.80 c
+56.50 431.97 57.17 431.30 58.00 431.30 c
+58.83 431.30 59.50 431.97 59.50 432.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 429.80 Td (Add more realistic strategy labels and risk summaries for spreads.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 417.80 m
+59.50 418.63 58.83 419.30 58.00 419.30 c
+57.17 419.30 56.50 418.63 56.50 417.80 c
+56.50 416.97 57.17 416.30 58.00 416.30 c
+58.83 416.30 59.50 416.97 59.50 417.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 414.80 Td (Document API-key setup clearly for anyone running the project after the workshop.) Tj ET
+0.100 0.280 0.520 rg
+0.100 0.280 0.520 RG
+59.50 402.80 m
+59.50 403.63 58.83 404.30 58.00 404.30 c
+57.17 404.30 56.50 403.63 56.50 402.80 c
+56.50 401.97 57.17 401.30 58.00 401.30 c
+58.83 401.30 59.50 401.97 59.50 402.80 c f
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 399.80 Td (Keep all execution paper-only unless the project later receives a full compliance and risk) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 9.60 Tf 70.00 386.80 Td (review.) Tj ET
+0.040 0.070 0.110 rg
+0.040 0.070 0.110 RG
+BT /F2 19.00 Tf 54.00 371.80 Td (Closing) Tj ET
+0.780 0.820 0.880 rg
+0.780 0.820 0.880 RG
+1.00 w 54.00 348.80 m 558.00 348.80 l S
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 332.80 Td (Buy the Dip is a strong Day 2 workshop artifact because it shows more than generated) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 318.80 Td (code. It shows a complete AI-assisted product loop: plan the architecture, build the agent) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 304.80 Td (host, stream the AI process, require human approval, persist the audit trail, and present) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 290.80 Td (the resulting portfolio in a polished interface.) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 272.80 Td (The project demonstrates how modern AI tools can help a small team move from concept to) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 258.80 Td (working demo quickly while still making deliberate engineering choices around safety,) Tj ET
+0.160 0.180 0.220 rg
+0.160 0.180 0.220 RG
+BT /F1 10.20 Tf 54.00 244.80 Td (observability, and reliability.) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 54.00 30.00 Td (Buy the Dip - AI Workshop Day 2 Project Report) Tj ET
+0.450 0.480 0.520 rg
+0.450 0.480 0.520 RG
+BT /F1 8.00 Tf 534.00 30.00 Td (6) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 16 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R] /Count 6 >>
+endobj
+17 0 obj
+<< /Type /Catalog /Pages 16 0 R >>
+endobj
+xref
+0 18
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000000160 00000 n 
+0000000228 00000 n 
+0000002646 00000 n 
+0000002793 00000 n 
+0000011050 00000 n 
+0000011197 00000 n 
+0000020317 00000 n 
+0000020464 00000 n 
+0000029289 00000 n 
+0000029438 00000 n 
+0000036583 00000 n 
+0000036732 00000 n 
+0000043345 00000 n 
+0000043494 00000 n 
+0000043585 00000 n 
+trailer
+<< /Size 18 /Root 17 0 R >>
+startxref
+43636
+%%EOF
