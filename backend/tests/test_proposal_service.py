@@ -29,3 +29,17 @@ def test_credit_call_spread():
     assert r["max_reward"] == 200.0  # net credit 2.00 * 100
     assert r["max_risk"] == 800.0    # (10 width * 1 - 2 credit) * 100
     assert r["breakeven"] == 198.0   # short_strike 200 - net_credit 2
+
+
+def test_ratio_spread_returns_safe_fallback():
+    """Ratio spreads (unequal leg quantities) must NOT return a max_reward.
+    Treating them as verticals produces a wrong max_reward figure."""
+    legs = [
+        {"action": "buy",  "side": "call", "qty": 2, "strike": 200, "premium": 3.0, "contract_symbol": "A"},
+        {"action": "sell", "side": "call", "qty": 1, "strike": 210, "premium": 1.0, "contract_symbol": "B"},
+    ]
+    r = compute_risk_reward(legs)
+    # net_debit = 2*3 - 1*1 = 5.0 → max_risk = 500
+    assert r["max_risk"] == 500.0
+    assert r["max_reward"] is None   # unknown — ratio spread has complex risk
+    assert r["breakeven"] is None

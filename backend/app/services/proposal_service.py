@@ -22,8 +22,11 @@ def compute_risk_reward(legs: list[dict]) -> dict:
         be = l["strike"] + l["premium"] if l["side"] == "call" else l["strike"] - l["premium"]
         return {"max_risk": l["premium"] * 100 * l["qty"], "max_reward": None, "breakeven": be}
     
-    # Vertical spread (same side, different strikes)
+    # Vertical spread (same side, different strikes, equal quantities)
     if len(legs) == 2 and legs[0]["side"] == legs[1]["side"]:
+        # Ratio spreads (unequal quantities) have complex/unlimited risk — use safe fallback
+        if longs and shorts and longs[0]["qty"] != shorts[0]["qty"]:
+            return {"max_risk": abs(net_debit) * 100, "max_reward": None, "breakeven": None}
         width = abs(legs[0]["strike"] - legs[1]["strike"])
         if net_debit > 0:  # debit spread
             qty = longs[0]["qty"]
