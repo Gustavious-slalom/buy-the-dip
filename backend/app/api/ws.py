@@ -13,12 +13,14 @@ async def ws(ws: WebSocket):
     session_id = str(uuid.uuid4())
     try:
         async def emit(evt: dict):
+            # Write to DB first so replay is consistent with what clients receive.
+            # If the DB write fails, the event is never sent — preventing ghost events.
             evt["session_id"] = session_id
-            await ws.send_text(json.dumps(evt))
             with get_session() as s:
                 s.add(Trace(session_id=session_id, ts=datetime.now(timezone.utc),
                             event_type=evt["type"], payload_json=json.dumps(evt)))
                 s.commit()
+            await ws.send_text(json.dumps(evt))
         while True:
             msg = await ws.receive_text()
             try:
