@@ -4,6 +4,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.agent.loop import run_session
 from app.db import get_session
 from app.models import Trace
+from app.services import recommendation_service
 from datetime import datetime, timezone
 
 router = APIRouter()
@@ -51,6 +52,11 @@ async def ws(ws: WebSocket):
                         await run_session(emit, session_id, user_msg)
                     except Exception as e:
                         await ws.send_text(json.dumps({"type": "agent.error", "data": {"message": str(e)}}))
+                elif data.get("type") == "recommendation.start":
+                    try:
+                        await recommendation_service.generate_all(emit)
+                    except Exception as e:
+                        await ws.send_text(json.dumps({"type": "recommendation.error", "data": {"message": str(e)}}))
                 elif data.get("type") == "replay":
                     from sqlmodel import select
                     try:

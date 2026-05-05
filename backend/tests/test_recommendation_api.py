@@ -41,3 +41,28 @@ def test_recommendations_latest_returns_persisted(client, monkeypatch):
     r = client.get("/recommendations/latest")
     assert r.status_code == 200
     assert r.json() == canned
+
+
+def test_ws_recommendation_start_flow(client, monkeypatch):
+    """WS receives discovery → 2 cards (in finish order) → complete after recommendation.start."""
+    from app.services import recommendation_service
+
+    async def fake_generate_all(emit):
+        await emit({"type": "recommendation.discovery", "ts": "t", "data": {"sources": {"watchlist": ["AAPL", "NVDA"], "positions": [], "discover": []}}})
+        await emit({"type": "recommendation.card", "ts": "t", "data": {"symbol": "AAPL", "source": "watchlist", "bias": "bullish", "confidence": 0.6, "rationale": "r", "top_headlines": []}})
+        await emit({"type": "recommendation.card", "ts": "t", "data": {"symbol": "NVDA", "source": "watchlist", "bias": "bullish", "confidence": 0.7, "rationale": "r", "top_headlines": []}})
+        await emit({"type": "recommendation.complete", "ts": "t", "data": {"run_id": "rid", "generated_at": "2026-05-05T14:02:31Z", "count": 2}})
+        return {"run_id": "rid", "generated_at": "2026-05-05T14:02:31Z", "cards": [], "sources": {"watchlist": [], "positions": [], "discover": []}}
+
+    monkeypatch.setattr(recommendation_service, "generate_all", fake_generate_all)
+
+    with client.websocket_connect("/ws") as ws:
+        ws.send_json({"type": "recommendation.start"})
+        msgs = [ws.receive_json() for _ in range(4)]
+    types = [m["type"] for m in msgs]
+    assert types == [
+        "recommendation.discovery",
+        "recommendation.card",
+        "recommendation.card",
+        "recommendation.complete",
+    ]
