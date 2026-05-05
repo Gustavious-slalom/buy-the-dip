@@ -69,9 +69,14 @@ cd frontend
 pnpm install
 
 cp .env.local.example .env.local
-# NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
-# NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
+
+**Required frontend env vars (`frontend/.env.local`):**
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_WS_URL` | WebSocket URL (default: `ws://localhost:8000/ws`) |
+| `NEXT_PUBLIC_API_URL` | REST API base URL (default: `http://localhost:8000`) |
 
 ## Running
 
