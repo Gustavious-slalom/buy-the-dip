@@ -110,7 +110,7 @@ def get_positions() -> list[dict]:
         for p in _trading().get_all_positions()
     ]
 
-_PERIOD_MAP = {"1D": ("1D", "5Min"), "1W": ("1W", "15Min"), "1M": ("1M", "1H"), "3M": ("3M", "1D"), "ALL": ("all", "1D")}
+_PERIOD_MAP = {"1D": ("1D", "5Min"), "1W": ("1W", "15Min"), "1M": ("1M", "1D"), "3M": ("3M", "1D"), "ALL": ("all", "1D")}
 
 def get_portfolio_history(period: str) -> dict:
     """Returns {period, points: [{t, equity}], base_value, profit_loss, profit_loss_pct}."""
