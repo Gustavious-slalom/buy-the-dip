@@ -2,6 +2,7 @@ import uuid
 import json
 from app.db import get_session
 from app.models import Proposal
+from app.config import settings
 
 
 def compute_risk_reward(legs: list[dict]) -> dict:
@@ -61,6 +62,10 @@ def create_proposal(session_id: str, ticker: str, legs: list[dict], rationale: s
     Returns a dict with proposal_id and computed risk/reward metrics.
     """
     rr = compute_risk_reward(legs)
+    if rr["max_risk"] is not None and rr["max_risk"] > settings.max_risk_usd:
+        raise ValueError(
+            f"Proposal max_risk ${rr['max_risk']:.2f} exceeds MAX_RISK_USD ${settings.max_risk_usd:.2f}"
+        )
     pid = str(uuid.uuid4())
     p = Proposal(
         id=pid,
