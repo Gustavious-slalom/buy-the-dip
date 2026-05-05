@@ -41,8 +41,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-cp .env.example .env
-# Fill in: ANTHROPIC_API_KEY, ALPACA_API_KEY, ALPACA_API_SECRET, FINNHUB_API_KEY
+# Create backend/.env with the variables listed below
 ```
 
 **Required env vars:**
@@ -65,7 +64,7 @@ cp .env.example .env
 cd frontend
 pnpm install
 
-cp .env.local.example .env.local
+# Create frontend/.env.local with the variables listed below
 ```
 
 **Required frontend env vars (`frontend/.env.local`):**
