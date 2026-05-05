@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RecommendationCard, CandidateSet, StreamEvent } from "@/types/recommendations";
+import type { RecommendationCard, CandidateSet, MarketBrief, StreamEvent } from "@/types/recommendations";
 
 export type RecommendationsStatus = "idle" | "connecting" | "running" | "done" | "error";
 
 export type RecommendationsState = {
   status: RecommendationsStatus;
   sources: CandidateSet | null;
+  marketBrief: MarketBrief | null;
   cards: RecommendationCard[];
   runId: string | null;
   generatedAt: string | null;
@@ -18,6 +19,7 @@ export type RecommendationsState = {
 const initial: RecommendationsState = {
   status: "idle",
   sources: null,
+  marketBrief: null,
   cards: [],
   runId: null,
   generatedAt: null,
@@ -66,6 +68,10 @@ export function useRecommendationsStream() {
           }
           case "recommendation.card":
             return { ...prev, cards: [...prev.cards, evt.data] };
+          case "recommendation.market_brief":
+            return { ...prev, marketBrief: evt.data };
+          case "recommendation.market_brief_warning":
+            return prev;
           case "recommendation.discovery_warning":
             return { ...prev, warning: evt.data.message };
           case "recommendation.complete":

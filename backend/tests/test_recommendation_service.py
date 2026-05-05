@@ -319,3 +319,242 @@ def test_get_latest_run_empty(monkeypatch):
     monkeypatch.setattr(recommendation_service, "get_session", fake_session)
 
     assert recommendation_service.get_latest_run() is None
+
+
+def test_build_market_brief_user_message_includes_quotes_and_news():
+    from app.agent.recommendation_prompt import build_market_brief_user_message
+    msg = build_market_brief_user_message(
+        index_quotes={"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30},
+        news_items=[
+            {"headline": "CPI cooler than expected", "summary": "Inflation eases."},
+            {"headline": "OPEC announces output cut", "summary": "Oil up 3%."},
+        ],
+    )
+    assert "SPY" in msg and "482.55" in msg
+    assert "QQQ" in msg and "IWM" in msg
+    assert "CPI cooler than expected" in msg
+    assert "OPEC announces output cut" in msg
+    assert "JSON" in msg
+
+
+def test_build_market_brief_user_message_handles_missing_inputs():
+    from app.agent.recommendation_prompt import build_market_brief_user_message
+    msg = build_market_brief_user_message(
+        index_quotes={"SPY": None, "QQQ": None, "IWM": None},
+        news_items=[],
+    )
+    assert "no recent news" in msg.lower() or "no news" in msg.lower()
+    assert "JSON" in msg
+
+
+def test_market_brief_system_prompt_specifies_schema():
+    from app.agent.recommendation_prompt import MARKET_BRIEF_SYSTEM_PROMPT
+    assert "JSON" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bias" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "headline" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "drivers" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bullish" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "bearish" in MARKET_BRIEF_SYSTEM_PROMPT
+    assert "neutral" in MARKET_BRIEF_SYSTEM_PROMPT
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_happy_path(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "CPI cooler than expected", "summary": "Inflation eases.", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "OPEC announces output cut", "summary": "Oil up 3%.", "url": "u", "datetime": 2, "related": ""},
+    ])
+
+    canned = '{"bias":"bullish","headline":"Risk-on tape; semis lead","drivers":["CPI cooler","OPEC cut","semis bid"]}'
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is not None
+    assert brief["bias"] == "bullish"
+    assert brief["headline"] == "Risk-on tape; semis lead"
+    assert brief["drivers"] == ["CPI cooler", "OPEC cut", "semis bid"]
+    assert "updated_at" in brief
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_malformed_returns_none(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [{"headline": "x", "summary": "", "url": "u", "datetime": 1, "related": ""}])
+
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = "this is not json"
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is None
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_no_inputs_returns_none(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": None, "QQQ": None, "IWM": None})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [])
+
+    called = {"n": 0}
+    class FakeMessages:
+        async def create(self, **kwargs):
+            called["n"] += 1
+            class Block:
+                text = "x"
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is None
+    assert called["n"] == 0
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_truncates_headline(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": None, "IWM": None})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [])
+
+    long_headline = "x" * 150
+    canned = f'{{"bias":"neutral","headline":"{long_headline}","drivers":[]}}'
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is not None
+    assert len(brief["headline"]) == 100
+
+
+@pytest.mark.asyncio
+async def test_generate_all_includes_market_brief_in_payload(monkeypatch):
+    from app.services import recommendation_service
+    from app.models import Watchlist, RecommendationRun
+    from sqlmodel import SQLModel, create_engine, Session, select as _select
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=["AAPL"], positions=[], discover=[],
+    ))
+
+    fixed_brief = {"bias": "bullish", "headline": "Risk-on", "drivers": ["a", "b"], "updated_at": "2026-05-05T14:00:00Z"}
+
+    async def fake_generate_market_brief():
+        return fixed_brief
+    monkeypatch.setattr(recommendation_service, "generate_market_brief", fake_generate_market_brief)
+
+    async def fake_generate_one(symbol, source):
+        return {"symbol": symbol, "source": source, "bias": "neutral", "confidence": 0.5, "rationale": "r", "top_headlines": []}
+    monkeypatch.setattr(recommendation_service, "generate_one", fake_generate_one)
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+
+    types = [e["type"] for e in emitted]
+    assert "recommendation.market_brief" in types
+    discovery_idx = types.index("recommendation.discovery")
+    brief_idx = types.index("recommendation.market_brief")
+    first_card_idx = types.index("recommendation.card")
+    complete_idx = types.index("recommendation.complete")
+    assert discovery_idx < brief_idx < first_card_idx < complete_idx
+
+    assert payload["market_brief"] == fixed_brief
+
+    with Session(engine) as s:
+        rows = s.exec(_select(RecommendationRun)).all()
+        assert len(rows) == 1
+        import json as _json
+        persisted = _json.loads(rows[0].payload_json)
+        assert persisted["market_brief"] == fixed_brief
+
+
+@pytest.mark.asyncio
+async def test_generate_all_market_brief_warning_when_none(monkeypatch):
+    from app.services import recommendation_service
+    from app.models import Watchlist
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=["AAPL"], positions=[], discover=[],
+    ))
+
+    async def fake_generate_market_brief():
+        return None
+    monkeypatch.setattr(recommendation_service, "generate_market_brief", fake_generate_market_brief)
+
+    async def fake_generate_one(symbol, source):
+        return {"symbol": symbol, "source": source, "bias": "neutral", "confidence": 0.5, "rationale": "r", "top_headlines": []}
+    monkeypatch.setattr(recommendation_service, "generate_one", fake_generate_one)
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+
+    types = [e["type"] for e in emitted]
+    assert "recommendation.market_brief_warning" in types
+    assert "recommendation.market_brief" not in types
+    assert payload["market_brief"] is None

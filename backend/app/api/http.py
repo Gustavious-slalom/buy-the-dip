@@ -107,5 +107,6 @@ def recommendations_latest():
             "generated_at": None,
             "cards": [],
             "sources": {"watchlist": [], "positions": [], "discover": []},
+            "market_brief": None,
         }
     return latest
