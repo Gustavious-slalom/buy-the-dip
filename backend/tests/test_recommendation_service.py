@@ -356,3 +356,105 @@ def test_market_brief_system_prompt_specifies_schema():
     assert "bullish" in MARKET_BRIEF_SYSTEM_PROMPT
     assert "bearish" in MARKET_BRIEF_SYSTEM_PROMPT
     assert "neutral" in MARKET_BRIEF_SYSTEM_PROMPT
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_happy_path(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "CPI cooler than expected", "summary": "Inflation eases.", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "OPEC announces output cut", "summary": "Oil up 3%.", "url": "u", "datetime": 2, "related": ""},
+    ])
+
+    canned = '{"bias":"bullish","headline":"Risk-on tape; semis lead","drivers":["CPI cooler","OPEC cut","semis bid"]}'
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is not None
+    assert brief["bias"] == "bullish"
+    assert brief["headline"] == "Risk-on tape; semis lead"
+    assert brief["drivers"] == ["CPI cooler", "OPEC cut", "semis bid"]
+    assert "updated_at" in brief
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_malformed_returns_none(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": 412.10, "IWM": 198.30})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [{"headline": "x", "summary": "", "url": "u", "datetime": 1, "related": ""}])
+
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = "this is not json"
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is None
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_no_inputs_returns_none(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": None, "QQQ": None, "IWM": None})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [])
+
+    called = {"n": 0}
+    class FakeMessages:
+        async def create(self, **kwargs):
+            called["n"] += 1
+            class Block:
+                text = "x"
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is None
+    assert called["n"] == 0
+
+
+@pytest.mark.asyncio
+async def test_generate_market_brief_truncates_headline(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {"SPY": 482.55, "QQQ": None, "IWM": None})
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [])
+
+    long_headline = "x" * 150
+    canned = f'{{"bias":"neutral","headline":"{long_headline}","drivers":[]}}'
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    brief = await recommendation_service.generate_market_brief()
+    assert brief is not None
+    assert len(brief["headline"]) == 100

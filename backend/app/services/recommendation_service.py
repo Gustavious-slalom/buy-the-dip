@@ -269,3 +269,92 @@ def get_latest_run() -> dict | None:
         payload = json.loads(row.payload_json)
         payload.setdefault("run_id", row.id)
         return payload
+
+
+INDEX_SYMBOLS = ["SPY", "QQQ", "IWM"]
+
+
+def _parse_brief_json(text: str) -> dict:
+    """Strict parse + shape validation for the market brief. Raises ValueError if invalid."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if "\n" in cleaned:
+            cleaned = cleaned.split("\n", 1)[1]
+        cleaned = cleaned.rsplit("```", 1)[0]
+    obj = json.loads(cleaned)
+    if not isinstance(obj, dict):
+        raise ValueError("not an object")
+    if obj.get("bias") not in ("bullish", "bearish", "neutral"):
+        raise ValueError("bad bias")
+    headline = obj.get("headline")
+    if not isinstance(headline, str) or not headline.strip():
+        raise ValueError("bad headline")
+    drivers = obj.get("drivers")
+    if not isinstance(drivers, list) or len(drivers) > 3:
+        raise ValueError("bad drivers")
+    if not all(isinstance(d, str) for d in drivers):
+        raise ValueError("bad drivers")
+    return obj
+
+
+async def generate_market_brief() -> dict | None:
+    """Returns {bias, headline, drivers, updated_at} or None on any failure or empty inputs."""
+    loop = asyncio.get_running_loop()
+    try:
+        quotes = await loop.run_in_executor(None, alpaca_service.get_latest_prices, INDEX_SYMBOLS)
+    except Exception:
+        quotes = {s: None for s in INDEX_SYMBOLS}
+    try:
+        news = await loop.run_in_executor(None, news_service.get_general_news)
+    except Exception:
+        news = []
+
+    have_quote = any(quotes.get(s) is not None for s in INDEX_SYMBOLS)
+    have_news = bool(news)
+    if not have_quote and not have_news:
+        return None
+
+    user_msg = recommendation_prompt.build_market_brief_user_message(
+        index_quotes=quotes, news_items=news
+    )
+    messages = [{"role": "user", "content": user_msg}]
+
+    async def call(messages_arg: list[dict]) -> str:
+        try:
+            resp = await _anthropic.messages.create(
+                model=settings.anthropic_haiku_model,
+                max_tokens=300,
+                system=recommendation_prompt.MARKET_BRIEF_SYSTEM_PROMPT,
+                messages=messages_arg,
+            )
+            return resp.content[0].text if resp.content else ""
+        except Exception:
+            return ""
+
+    raw = await call(messages)
+    if not raw:
+        return None
+    try:
+        parsed = _parse_brief_json(raw)
+    except (ValueError, json.JSONDecodeError):
+        retry_messages = messages + [
+            {"role": "assistant", "content": raw},
+            {"role": "user", "content": recommendation_prompt.build_strict_retry_message()},
+        ]
+        raw2 = await call(retry_messages)
+        if not raw2:
+            return None
+        try:
+            parsed = _parse_brief_json(raw2)
+        except (ValueError, json.JSONDecodeError):
+            return None
+
+    headline = parsed["headline"][:100]
+    drivers = [d[:60] for d in parsed["drivers"][:3]]
+    return {
+        "bias": parsed["bias"],
+        "headline": headline,
+        "drivers": drivers,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
