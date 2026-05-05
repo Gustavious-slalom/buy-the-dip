@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 
 function useClock() {
@@ -23,6 +25,7 @@ function useClock() {
 export function StatusRail() {
   const clock = useClock();
   const { status, events } = useSession();
+  const pathname = usePathname();
   const lastTool = [...events].reverse().find(e => e.type === "agent.tool_call") as { data: { name: string } } | undefined;
 
   const stateLabel =
@@ -72,6 +75,21 @@ export function StatusRail() {
             ▸ {stateLabel}
           </b>
         </span>
+        <span className="w-px h-3.5 bg-[color:var(--hairline-2)]" />
+        <nav className="flex items-center gap-1">
+          <Link
+            href="/"
+            className={`px-2 py-0.5 text-[10.5px] tracking-[.18em] uppercase border ${pathname === "/" ? "border-[color:var(--signal)] text-[color:var(--signal)]" : "border-transparent text-[color:var(--fg-dim)] hover:text-[color:var(--fg)]"}`}
+          >
+            Trade
+          </Link>
+          <Link
+            href="/portfolio"
+            className={`px-2 py-0.5 text-[10.5px] tracking-[.18em] uppercase border ${pathname === "/portfolio" ? "border-[color:var(--signal)] text-[color:var(--signal)]" : "border-transparent text-[color:var(--fg-dim)] hover:text-[color:var(--fg)]"}`}
+          >
+            Portfolio
+          </Link>
+        </nav>
         <span className="w-px h-3.5 bg-[color:var(--hairline-2)]" />
         <span className="hidden sm:inline">NYSE OPEN</span>
         <span className="w-px h-3.5 bg-[color:var(--hairline-2)] hidden sm:inline-block" />
