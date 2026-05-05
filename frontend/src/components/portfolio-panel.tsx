@@ -1,23 +1,46 @@
 "use client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useSession } from "@/lib/session-context";
 import { useMemo } from "react";
+
+const fmtUsd = (n: number | undefined) =>
+  typeof n === "number"
+    ? n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+    : "—";
 
 export function PortfolioPanel() {
   const { events } = useSession();
   const portfolio = useMemo(() => {
-    const ev = [...events].reverse().find(e => e.type === "agent.tool_result" && (e as any).data.name === "get_portfolio");
-    return ev ? (ev as any).data.output : null;
+    const ev = [...events].reverse().find(
+      e => e.type === "agent.tool_result" && (e as { data: { name: string } }).data.name === "get_portfolio"
+    );
+    return ev ? (ev as { data: { output: { cash?: number; equity?: number; buying_power?: number } } }).data.output : null;
   }, [events]);
-  if (!portfolio) return null;
+
   return (
-    <Card>
-      <CardHeader><CardTitle>Portfolio</CardTitle></CardHeader>
-      <CardContent className="text-sm space-y-1">
-        <div>Cash: ${portfolio.cash?.toFixed(2)}</div>
-        <div>Equity: ${portfolio.equity?.toFixed(2)}</div>
-        <div>Buying power: ${portfolio.buying_power?.toFixed(2)}</div>
-      </CardContent>
-    </Card>
+    <section className="px-4 py-5 border-b border-[color:var(--hairline)]">
+      <h3 className="smallcaps panel-rule mb-4">
+        Portfolio
+        {portfolio?.equity != null && (
+          <span className="num normal-case tracking-normal text-[11px] text-[color:var(--fg-dim)] ml-2">
+            {fmtUsd(portfolio.equity)}
+          </span>
+        )}
+      </h3>
+
+      {!portfolio ? (
+        <div className="text-[12px] text-[color:var(--fg-mute)] font-mono">
+          waiting for snapshot…
+        </div>
+      ) : (
+        <div className="grid grid-cols-[1fr_auto] gap-y-2 text-[12.5px]">
+          <span className="smallcaps">Cash</span>
+          <span className="num">{fmtUsd(portfolio.cash)}</span>
+          <span className="smallcaps">Equity</span>
+          <span className="num">{fmtUsd(portfolio.equity)}</span>
+          <span className="smallcaps">Buying Pwr</span>
+          <span className="num">{fmtUsd(portfolio.buying_power)}</span>
+        </div>
+      )}
+    </section>
   );
 }

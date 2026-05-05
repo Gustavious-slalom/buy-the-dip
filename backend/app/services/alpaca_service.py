@@ -1,5 +1,7 @@
 import json
 from datetime import datetime, timezone
+from math import gcd
+from functools import reduce
 from pathlib import Path
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
@@ -80,17 +82,19 @@ def submit_multileg_order(legs: list[dict]) -> dict:
     settings.assert_paper()
     if settings.fixtures_mode:
         return {"id": "fixture-order-00000000", "status": "accepted", "raw": "{}"}
+    qtys = [int(l.get("qty", 1)) for l in legs]
+    common = reduce(gcd, qtys) or 1
     order_legs = [
         OptionLegRequest(
             symbol=l["contract_symbol"],
-            ratio_qty=l.get("qty", 1),
+            ratio_qty=q // common,
             side=OrderSide.BUY if l["action"] == "buy" else OrderSide.SELL,
             position_intent=PositionIntent.BUY_TO_OPEN if l["action"] == "buy" else PositionIntent.SELL_TO_OPEN,
         )
-        for l in legs
+        for l, q in zip(legs, qtys)
     ]
     req = MarketOrderRequest(
-        qty=1, order_class=OrderClass.MLEG, time_in_force=TimeInForce.DAY,
+        qty=common, order_class=OrderClass.MLEG, time_in_force=TimeInForce.DAY,
         legs=order_legs,
     )
     order = _trading().submit_order(req)

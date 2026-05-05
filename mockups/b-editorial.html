@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Buy the Dip · Dispatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f2ea;
+    --paper-2:#ebe4d6;
+    --ink:#0c1a2b;
+    --ink-2:#1f2c3d;
+    --rule:#cfc6b3;
+    --rule-2:#9a8e76;
+    --oxblood:#7a1f2b;
+    --forest:#1f4d3a;
+    --gold:#a8854a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Manrope",system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/></svg>");
+    mix-blend-mode:multiply;z-index:99;
+  }
+  .serif{font-family:"Fraunces",Georgia,serif;font-feature-settings:"ss01","ss02"}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .smallcaps{font-family:"Manrope",sans-serif;letter-spacing:.22em;text-transform:uppercase;font-size:10.5px;font-weight:600;color:var(--ink-2)}
+  .num{font-variant-numeric:tabular-nums lining-nums}
+
+  /* Masthead */
+  header.mast{
+    border-bottom:2px solid var(--ink);
+    padding:18px 32px 14px; display:flex;align-items:flex-end;gap:24px;
+  }
+  header.mast .vol{font-family:"Fraunces",serif;font-style:italic;font-size:12px;color:var(--ink-2)}
+  header.mast h1{
+    font-family:"Fraunces",serif;font-weight:500;font-size:34px;line-height:1;letter-spacing:-.01em;
+  }
+  header.mast h1 em{font-style:italic;color:var(--oxblood);font-weight:500}
+  header.mast .right{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink-2);line-height:1.4}
+  header.mast .right b{display:block;font-family:"Fraunces",serif;font-size:14px;color:var(--ink)}
+
+  .subrail{
+    border-bottom:1px solid var(--rule);padding:8px 32px;
+    display:flex;gap:28px;align-items:center;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)
+  }
+  .subrail .dot{width:6px;height:6px;border-radius:50%;background:var(--forest);display:inline-block;margin-right:8px}
+  .subrail b{font-family:"Fraunces",serif;font-style:italic;letter-spacing:.02em;text-transform:none;font-size:12.5px;color:var(--ink)}
+
+  /* Layout */
+  .wrap{display:grid;grid-template-columns:280px 1fr 360px;height:calc(100vh - 100px)}
+  aside,main{overflow:auto}
+  aside{padding:28px 24px;border-right:1px solid var(--rule)}
+  aside.right{border-right:none;border-left:1px solid var(--rule)}
+  main{padding:32px 36px}
+
+  section + section{margin-top:28px}
+  .h{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--rule);padding-bottom:6px}
+  .h .label{flex:1}
+
+  /* Symbol */
+  .sym-card .name{font-family:"Fraunces",serif;font-size:48px;line-height:1;letter-spacing:-.02em;font-weight:500}
+  .sym-card .name em{color:var(--oxblood);font-style:italic;font-weight:500}
+  .sym-card .co{font-family:"Fraunces",serif;font-style:italic;color:var(--ink-2);font-size:14px;margin-top:4px}
+  .sym-card .px{font-family:"Fraunces",serif;font-size:32px;font-weight:500;margin-top:14px;font-variant-numeric:tabular-nums lining-nums}
+  .sym-card .ch{font-family:"Manrope",sans-serif;font-weight:500;font-size:13px;color:var(--forest);margin-top:2px}
+  .ch.dn{color:var(--oxblood)}
+  .stat{display:grid;grid-template-columns:1fr auto;gap:6px 14px;margin-top:18px;padding-top:14px;border-top:1px dotted var(--rule-2);font-size:12.5px}
+  .stat .k{font-family:"Fraunces",serif;font-style:italic;color:var(--ink-2)}
+  .stat .v{font-family:"JetBrains Mono",mono;font-variant-numeric:tabular-nums}
+
+  /* Holdings */
+  .hold{display:grid;grid-template-columns:1fr auto auto;gap:8px 12px;font-size:12.5px;padding:10px 0;border-bottom:1px dotted var(--rule-2);align-items:baseline}
+  .hold:last-child{border-bottom:0}
+  .hold .nm{font-family:"Fraunces",serif;font-size:14px}
+  .hold .nm small{display:block;font-size:11px;color:var(--ink-2);font-style:italic;margin-top:1px}
+  .hold .q{font-family:"JetBrains Mono",mono;color:var(--ink-2);font-size:12px}
+  .hold .pl{font-family:"JetBrains Mono",mono;text-align:right;font-variant-numeric:tabular-nums}
+  .pl.up{color:var(--forest)} .pl.dn{color:var(--oxblood)}
+
+  /* Dispatch — proposal */
+  .dispatch{
+    border-top:3px double var(--ink);
+    border-bottom:1px solid var(--ink);
+    padding:24px 0 28px;
+  }
+  .dispatch .date{
+    font-family:"Fraunces",serif;font-style:italic;font-size:13px;color:var(--ink-2);
+    letter-spacing:.04em; margin-bottom:8px;
+  }
+  .dispatch h2{
+    font-family:"Fraunces",serif;font-weight:400;font-size:44px;line-height:1.05;letter-spacing:-.015em;
+    margin-bottom:8px;
+  }
+  .dispatch h2 em{font-style:italic;color:var(--oxblood)}
+  .dispatch .deck{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:400;font-size:18px;color:var(--ink-2);
+    line-height:1.4; max-width:62ch; margin-bottom:20px;
+  }
+  .dispatch .body{
+    column-count:2;column-gap:32px;column-rule:1px solid var(--rule);
+    font-size:14px;line-height:1.65;
+  }
+  .dispatch .body p{margin-bottom:10px}
+  .dispatch .body p:first-child::first-letter{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    float:left;font-size:54px;line-height:.85;padding:6px 8px 0 0;color:var(--oxblood);
+  }
+  .legs{
+    margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:1px solid var(--ink);
+  }
+  .leg{padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+  .leg + .leg{border-left:1px solid var(--ink)}
+  .leg .tag{
+    font-family:"Fraunces",serif;font-style:italic;font-size:12.5px;
+    padding:2px 9px;border:1px solid currentColor;
+  }
+  .leg.buy{color:var(--forest)}
+  .leg.sell{color:var(--oxblood)}
+  .leg .sym{font-family:"JetBrains Mono",mono;font-size:12px;color:var(--ink)}
+  .leg .px{font-family:"Fraunces",serif;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums lining-nums}
+  .figures{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--rule);border-top:none}
+  .figures > div{padding:12px 14px;text-align:center}
+  .figures > div + div{border-left:1px solid var(--rule)}
+  .figures .k{font-family:"Fraunces",serif;font-style:italic;font-size:11px;color:var(--ink-2);text-transform:lowercase;letter-spacing:.02em}
+  .figures .v{font-family:"Fraunces",serif;font-size:20px;font-weight:500;font-variant-numeric:tabular-nums lining-nums;margin-top:2px}
+
+  .cta{margin-top:22px;display:flex;gap:10px;align-items:center}
+  .btn{font-family:"Fraunces",serif;font-style:italic;font-size:15px;padding:11px 22px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--ink);color:var(--paper)}
+  .btn.warn{border-color:var(--oxblood);color:var(--oxblood)}
+  .footnote{font-family:"Fraunces",serif;font-style:italic;font-size:12px;color:var(--ink-2);margin-left:auto}
+
+  /* Chart */
+  .chart-card{margin-top:6px}
+  .chart-card .head{display:flex;align-items:baseline;gap:14px}
+  .chart-card .head .px{font-family:"Fraunces",serif;font-size:36px;font-weight:500;font-variant-numeric:tabular-nums lining-nums}
+  .chart-card .head .ch{font-family:"Manrope",sans-serif;font-weight:600;color:var(--forest)}
+  .chart-card .head .rng{margin-left:auto;font-family:"Fraunces",serif;font-style:italic;font-size:13px;color:var(--ink-2)}
+  .chart-card .head .rng span{padding:2px 8px;cursor:pointer}
+  .chart-card .head .rng .on{background:var(--ink);color:var(--paper);font-style:normal;font-family:"JetBrains Mono",mono;font-size:11px}
+  .chart-card svg{display:block;width:100%;height:220px;margin-top:14px;border:1px solid var(--rule);background:linear-gradient(180deg,var(--paper),var(--paper-2))}
+
+  /* Chain */
+  .chain h3{font-family:"Fraunces",serif;font-weight:500;font-size:22px}
+  .chain h3 em{font-style:italic;color:var(--oxblood)}
+  .chain table{width:100%;border-collapse:collapse;margin-top:8px;font-family:"JetBrains Mono",mono;font-variant-numeric:tabular-nums;font-size:12.5px}
+  .chain th{font-family:"Fraunces",serif;font-style:italic;font-weight:400;font-size:12px;color:var(--ink-2);text-align:right;padding:8px 12px;border-bottom:2px solid var(--ink)}
+  .chain th:nth-child(7),.chain td:nth-child(7){text-align:center;border-left:1px solid var(--rule);border-right:1px solid var(--rule);background:var(--paper-2);font-family:"Fraunces",serif;font-weight:500;font-size:14px}
+  .chain td{text-align:right;padding:7px 12px;border-bottom:1px dotted var(--rule-2)}
+  .chain tr:hover{background:rgba(122,31,43,.04)}
+  .chain td.bid{color:var(--forest)} .chain td.ask{color:var(--oxblood)}
+
+  /* Trace */
+  .col h3{font-family:"Fraunces",serif;font-weight:500;font-size:22px;letter-spacing:-.01em}
+  .col h3 em{font-style:italic;color:var(--oxblood)}
+  .col .by{font-family:"Fraunces",serif;font-style:italic;font-size:12.5px;color:var(--ink-2);margin-bottom:18px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:12px 0;border-bottom:1px dotted var(--rule-2)}
+  .step .ts{font-family:"JetBrains Mono",mono;font-size:11px;color:var(--ink-2);padding-top:3px}
+  .step .body .name{font-family:"Fraunces",serif;font-weight:500;font-size:15px}
+  .step.active .body .name{color:var(--oxblood)}
+  .step.active .body .name::after{content:" ▸";font-style:italic}
+  .step .body .arg{font-family:"JetBrains Mono",mono;font-size:11.5px;color:var(--ink-2);margin-top:3px}
+  .pull{
+    margin:18px 0;padding:14px 0 14px 16px;border-left:3px solid var(--oxblood);
+    font-family:"Fraunces",serif;font-style:italic;font-size:16px;line-height:1.45;
+  }
+  .pull cite{display:block;margin-top:8px;font-style:normal;font-family:"Manrope",sans-serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+</style>
+</head>
+<body>
+  <header class="mast">
+    <div>
+      <div class="vol">Vol. iv · No. 042</div>
+      <h1>Buy <em>the</em> Dip <span style="font-style:italic;font-weight:400;color:var(--ink-2)">— a daily dispatch</span></h1>
+    </div>
+    <div class="right">
+      <b>Monday, May 5 · 10:42 ET</b>
+      Markets open · NYSE
+    </div>
+  </header>
+  <div class="subrail">
+    <span><span class="dot"></span>Agent at work · drafting <b>vertical spread</b></span>
+    <span>Session P&amp;L <b style="color:var(--forest)">+$1,284.20</b></span>
+    <span>Buying Power <b>$48,210</b></span>
+    <span style="margin-left:auto">No. 042 · est. 2026</span>
+  </div>
+
+  <div class="wrap">
+    <aside>
+      <section class="sym-card">
+        <div class="h"><span class="smallcaps label">Today's Subject</span></div>
+        <div class="name">A<em>A</em>PL</div>
+        <div class="co">Apple Inc. · NASDAQ</div>
+        <div class="px">$245.83</div>
+        <div class="ch">▲ +1.84 (+0.75%)</div>
+        <div class="stat">
+          <span class="k">opening bell</span><span class="v">244.10</span>
+          <span class="k">day's range</span><span class="v">243.92 — 246.40</span>
+          <span class="k">average vol.</span><span class="v">28.4M</span>
+          <span class="k">implied vol. rank</span><span class="v" style="color:var(--gold)">38</span>
+        </div>
+      </section>
+
+      <section>
+        <div class="h"><span class="smallcaps label">Holdings</span><span class="mono" style="font-size:11px;color:var(--ink-2)">$124,820</span></div>
+        <div class="hold"><span class="nm">Apple Inc.<small>AAPL · 100 sh.</small></span><span class="q">cost 241.71</span><span class="pl up">+412.00</span></div>
+        <div class="hold"><span class="nm">NVIDIA 920C<small>5/17 · 3 ct.</small></span><span class="q">cost 6.10</span><span class="pl up">+186.50</span></div>
+        <div class="hold"><span class="nm">SPY 510P<small>5/24 · 5 ct.</small></span><span class="q">cost 4.20</span><span class="pl dn">−92.10</span></div>
+        <div class="hold"><span class="nm">Meta Platforms<small>META · 25 sh.</small></span><span class="q">cost 510.40</span><span class="pl up">+778.30</span></div>
+      </section>
+
+      <section>
+        <div class="h"><span class="smallcaps label">Risk Ledger</span></div>
+        <div class="stat">
+          <span class="k">buying power</span><span class="v">$48,210</span>
+          <span class="k">deployed</span><span class="v">$12,400</span>
+          <span class="k">max daily loss</span><span class="v" style="color:var(--oxblood)">−$5,000</span>
+          <span class="k">open orders</span><span class="v">2</span>
+        </div>
+      </section>
+    </aside>
+
+    <main>
+      <article class="dispatch">
+        <div class="date">10:42 ET — Monday, May 5 · A dispatch on <em>AAPL</em></div>
+        <h2>A measured wager on Apple's <em>quiet drift</em> higher.</h2>
+        <p class="deck">The agent proposes a defined-risk vertical — buy the 245 call, write the 250 — capturing modest upside through 17 May without surrendering convexity to elevated vega.</p>
+        <div class="body">
+          <p>Apple has held above its 200-day exponential moving average through last week's softness, and the 245 strike now sits just out of the money with the underlying at 245.83. Yesterday's volume was unremarkable; today's news flow has been net-positive — sentiment scoring the morning's three articles at 0.41, with no earnings catalysts inside the window.</p>
+          <p>Implied volatility ranks at 38 — moderate, not cheap. A long single-leg call would carry an unwelcome vega bill. By writing the 250 against it, the agent caps upside at $255 in maximum profit but cuts the entry cost roughly in half, to $245 net debit. Breakeven sits at 247.45 — a 0.66% move from spot — and the structure expires in twelve days.</p>
+          <p>The trade is, in short, a <em>controlled expression</em> of the same thesis a long call would carry, with risk that fits neatly inside the day's $5,000 ceiling.</p>
+        </div>
+        <div class="legs">
+          <div class="leg buy">
+            <span class="tag">Buy to open</span>
+            <span class="sym">AAPL 250517 C 245</span>
+            <span class="px">@ 4.85</span>
+          </div>
+          <div class="leg sell">
+            <span class="tag">Sell to open</span>
+            <span class="sym">AAPL 250517 C 250</span>
+            <span class="px">@ 2.40</span>
+          </div>
+        </div>
+        <div class="figures">
+          <div><div class="k">net debit</div><div class="v">$245</div></div>
+          <div><div class="k">max profit</div><div class="v" style="color:var(--forest)">$255</div></div>
+          <div><div class="k">max loss</div><div class="v" style="color:var(--oxblood)">−$245</div></div>
+          <div><div class="k">breakeven</div><div class="v">247.45</div></div>
+          <div><div class="k">confidence</div><div class="v">0.78</div></div>
+        </div>
+        <div class="cta">
+          <button class="btn primary">Approve &amp; Submit</button>
+          <button class="btn warn">Decline</button>
+          <button class="btn">Edit Legs</button>
+          <span class="footnote">Filed by the agent · reviewed by you</span>
+        </div>
+      </article>
+
+      <section class="chart-card">
+        <div class="h"><span class="smallcaps label">Price · 1 month</span></div>
+        <div class="head">
+          <span class="px">$245.83</span>
+          <span class="ch">▲ +1.84 · +0.75%</span>
+          <span class="rng"><span>1d</span><span>5d</span><span class="on">1m</span><span>3m</span><span>1y</span></span>
+        </div>
+        <svg viewBox="0 0 800 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="ge" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#1f4d3a" stop-opacity=".22"/>
+              <stop offset="1" stop-color="#1f4d3a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g stroke="#cfc6b3" stroke-dasharray="2 4">
+            <line x1="0" x2="800" y1="55" y2="55"/>
+            <line x1="0" x2="800" y1="110" y2="110"/>
+            <line x1="0" x2="800" y1="165" y2="165"/>
+          </g>
+          <path fill="url(#ge)" d="M0,165 L40,158 L80,150 L120,162 L160,140 L200,128 L240,135 L280,118 L320,108 L360,124 L400,102 L440,92 L480,108 L520,82 L560,75 L600,88 L640,62 L680,52 L720,68 L760,48 L800,42 L800,220 L0,220 Z"/>
+          <path fill="none" stroke="#1f4d3a" stroke-width="1.4" d="M0,165 L40,158 L80,150 L120,162 L160,140 L200,128 L240,135 L280,118 L320,108 L360,124 L400,102 L440,92 L480,108 L520,82 L560,75 L600,88 L640,62 L680,52 L720,68 L760,48 L800,42"/>
+          <circle cx="800" cy="42" r="3.5" fill="#7a1f2b"/>
+        </svg>
+      </section>
+
+      <section class="chain">
+        <div class="h"><span class="smallcaps label">Options Chain</span><span style="font-family:'Fraunces',serif;font-style:italic;color:var(--ink-2);font-size:12.5px">Calls · expiring May 17 · in twelve days</span></div>
+        <table>
+          <thead><tr><th>open int.</th><th>volume</th><th>iv</th><th>delta</th><th>bid</th><th>ask</th><th>strike</th></tr></thead>
+          <tbody>
+            <tr><td>1,820</td><td>412</td><td>22.4</td><td>0.86</td><td class="bid">8.20</td><td class="ask">8.35</td><td>240.0</td></tr>
+            <tr><td>3,401</td><td>901</td><td>21.1</td><td>0.71</td><td class="bid">5.65</td><td class="ask">5.80</td><td>242.5</td></tr>
+            <tr style="background:rgba(31,77,58,.05)"><td>4,210</td><td>1,250</td><td>20.6</td><td>0.58</td><td class="bid">4.80</td><td class="ask">4.85</td><td>245.0</td></tr>
+            <tr><td>2,940</td><td>880</td><td>20.2</td><td>0.42</td><td class="bid">3.15</td><td class="ask">3.25</td><td>247.5</td></tr>
+            <tr style="background:rgba(122,31,43,.05)"><td>5,120</td><td>2,011</td><td>20.0</td><td>0.31</td><td class="bid">2.35</td><td class="ask">2.40</td><td>250.0</td></tr>
+            <tr><td>1,704</td><td>503</td><td>20.4</td><td>0.21</td><td class="bid">1.55</td><td class="ask">1.62</td><td>252.5</td></tr>
+            <tr><td>980</td><td>241</td><td>20.9</td><td>0.13</td><td class="bid">0.95</td><td class="ask">1.02</td><td>255.0</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <aside class="right col">
+      <h3>The Agent's <em>workings</em></h3>
+      <div class="by">A live transcript — verbatim, time-stamped, footnoted.</div>
+
+      <div class="step">
+        <span class="ts">10:41:02</span>
+        <div class="body"><div class="name">Quote retrieved</div><div class="arg">AAPL → $245.83</div></div>
+      </div>
+      <div class="step">
+        <span class="ts">10:41:04</span>
+        <div class="body"><div class="name">News scanned</div><div class="arg">3 articles · sentiment +0.41</div></div>
+      </div>
+      <div class="step">
+        <span class="ts">10:41:09</span>
+        <div class="body"><div class="name">Chain pulled</div><div class="arg">expiry 2025-05-17 · 64 ct.</div></div>
+      </div>
+      <div class="step">
+        <span class="ts">10:41:14</span>
+        <div class="body"><div class="name">IV rank computed</div><div class="arg">→ 38 (moderate)</div></div>
+      </div>
+      <div class="step active">
+        <span class="ts">10:41:22</span>
+        <div class="body"><div class="name">Drafting proposal</div><div class="arg">vertical · 245/250 · debit</div></div>
+      </div>
+
+      <blockquote class="pull">
+        "Spot held above the 200-EMA on the dip; vega is moderate; a defined-risk debit spread captures upside while capping exposure."
+        <cite>— from the agent's notes</cite>
+      </blockquote>
+
+      <div class="step">
+        <span class="ts">—</span>
+        <div class="body"><div class="name" style="color:var(--ink-2);font-style:italic">Awaiting the editor</div></div>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>
