@@ -1,11 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 
 export function TickerInput() {
   const { sendIdea, sendReplay, status } = useSession();
   const [v, setV] = useState("AAPL");
   const running = status === "running";
+  const searchParams = useSearchParams();
+  const autoSubmittedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoSubmittedRef.current) return;
+    const ticker = searchParams?.get("ticker");
+    if (!ticker) return;
+    const sym = ticker.toUpperCase().trim();
+    if (!sym) return;
+    setV(sym);
+    if (searchParams?.get("autosubmit") === "1") {
+      autoSubmittedRef.current = true;
+      sendIdea(sym);
+    }
+  }, [searchParams, sendIdea]);
 
   return (
     <section className="px-4 py-5 border-b border-[color:var(--hairline)]">

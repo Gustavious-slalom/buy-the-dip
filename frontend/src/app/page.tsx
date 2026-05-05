@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { TickerInput } from "@/components/ticker-input";
 import { AgentTrace } from "@/components/agent-trace";
 import { ProposalCard } from "@/components/proposal-card";
@@ -12,7 +13,9 @@ export default function Page() {
       style={{ height: "calc(100vh - 36px)" }}
     >
       <aside className="overflow-auto border-r border-[color:var(--hairline)] reveal reveal-1">
-        <TickerInput />
+        <Suspense fallback={null}>
+          <TickerInput />
+        </Suspense>
         <PortfolioPanel />
       </aside>
       <main className="overflow-auto p-5 space-y-5 reveal reveal-2">
