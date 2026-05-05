@@ -7,6 +7,7 @@ import { useRecommendationsStream } from "@/lib/recommendations-ws";
 import { fmtTime } from "@/lib/utils";
 import { RecommendationCard } from "./recommendation-card";
 import { SourcesStrip } from "./sources-strip";
+import { MarketBriefBanner } from "./market-brief-banner";
 
 const SOURCE_RANK: Record<string, number> = { watchlist: 0, positions: 1, discover: 2 };
 
@@ -37,6 +38,7 @@ export function RecommendationsView() {
   const cards = liveActive ? state.cards : (latest?.cards ?? []);
   const sources = liveActive ? state.sources : (latest?.sources ?? null);
   const generatedAt = liveActive ? state.generatedAt : (latest?.generated_at ?? null);
+  const marketBrief = liveActive ? state.marketBrief : (latest?.market_brief ?? null);
 
   const sorted = useMemo(() => sortCards(cards), [cards]);
   const running = state.status === "running" || state.status === "connecting";
@@ -97,6 +99,7 @@ export function RecommendationsView() {
         </div>
       )}
 
+      <MarketBriefBanner brief={marketBrief} />
       {totalSources > 0 && <SourcesStrip sources={sources} />}
 
       {sorted.length === 0 && !running && !hasAnything && (
