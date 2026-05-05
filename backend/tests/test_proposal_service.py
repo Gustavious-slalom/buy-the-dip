@@ -1,4 +1,6 @@
 from app.services.proposal_service import compute_risk_reward
+import pytest
+from unittest.mock import patch
 
 
 def test_long_call_risk():
@@ -43,3 +45,17 @@ def test_ratio_spread_returns_safe_fallback():
     assert r["max_risk"] == 500.0
     assert r["max_reward"] is None   # unknown — ratio spread has complex risk
     assert r["breakeven"] is None
+
+
+def test_create_proposal_raises_if_over_max_risk():
+    """create_proposal must reject proposals that exceed MAX_RISK_USD before DB write."""
+    # A single long call with premium=60 and qty=1 → max_risk = 6000
+    legs = [{"action": "buy", "side": "call", "qty": 1, "strike": 500, "premium": 60.0, "contract_symbol": "X"}]
+    with patch("app.services.proposal_service.settings") as mock_settings:
+        mock_settings.max_risk_usd = 5000.0
+        with pytest.raises(ValueError, match="exceeds MAX_RISK_USD"):
+            from app.services.proposal_service import create_proposal
+            create_proposal(
+                session_id="s1", ticker="AAPL", legs=legs,
+                rationale="test", confidence=0.8, risks=[], expiry="2026-06-20"
+            )
