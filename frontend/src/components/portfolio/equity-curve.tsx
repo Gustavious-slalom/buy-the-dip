@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 import type { EquityCurve as EC, Period } from "@/types/portfolio";
 import { getEquityCurve } from "@/lib/api";
+import { usePortfolioInvalidate } from "@/lib/portfolio-events";
 import { fmtUsd, fmtPct } from "@/lib/utils";
 
 const PERIODS: Period[] = ["1D", "1W", "1M", "3M", "ALL"];
@@ -31,6 +32,17 @@ export function EquityCurve() {
       cancelled = true;
     };
   }, [period]);
+
+  const refetch = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    getEquityCurve(period)
+      .then(d => { if (!cancelled) { setData(d); setLoading(false); } })
+      .catch((e: Error) => { if (!cancelled) { setError(e.message); setLoading(false); } });
+    return () => { cancelled = true; };
+  }, [period]);
+  usePortfolioInvalidate(refetch);
 
   const plColor = (data?.profit_loss ?? 0) >= 0 ? "var(--up)" : "var(--down)";
 
