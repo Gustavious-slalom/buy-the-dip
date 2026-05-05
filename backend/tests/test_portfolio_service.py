@@ -222,3 +222,20 @@ def test_build_snapshot_partial_failure(monkeypatch):
     assert "positions_unavailable" in snap["errors"]
     assert snap["positions"] == []
     assert snap["account"]["equity"] == 100000.0
+
+
+def test_get_equity_curve_passthrough(monkeypatch):
+    monkeypatch.setenv("FIXTURES_MODE", "1")
+    from importlib import reload
+    from app import config; reload(config)
+    from app.services import alpaca_service; reload(alpaca_service)
+    from app.services import portfolio_service; reload(portfolio_service)
+    res = portfolio_service.get_equity_curve("1M")
+    assert res["period"] == "1M"
+    assert isinstance(res["points"], list)
+
+
+def test_get_equity_curve_invalid_period():
+    from app.services import portfolio_service
+    with pytest.raises(ValueError):
+        portfolio_service.get_equity_curve("INVALID")

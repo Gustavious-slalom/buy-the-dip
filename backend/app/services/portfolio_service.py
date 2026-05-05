@@ -224,3 +224,12 @@ def build_snapshot() -> dict:
         "history": history,
         "errors": errors,
     }
+
+
+VALID_PERIODS = {"1D", "1W", "1M", "3M", "ALL"}
+
+
+def get_equity_curve(period: str) -> dict:
+    if period not in VALID_PERIODS:
+        raise ValueError(f"invalid period: {period}")
+    return alpaca_service.get_portfolio_history(period)
