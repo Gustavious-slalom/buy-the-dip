@@ -89,6 +89,12 @@ export function StatusRail() {
           >
             Portfolio
           </Link>
+          <Link
+            href="/recommendations"
+            className={`px-2 py-0.5 text-[10.5px] tracking-[.18em] uppercase border ${pathname === "/recommendations" ? "border-[color:var(--signal)] text-[color:var(--signal)]" : "border-transparent text-[color:var(--fg-dim)] hover:text-[color:var(--fg)]"}`}
+          >
+            Ideas
+          </Link>
         </nav>
         <span className="w-px h-3.5 bg-[color:var(--hairline-2)]" />
         <span className="hidden sm:inline">NYSE OPEN</span>

@@ -11,6 +11,7 @@ from app.models import Proposal, Execution
 from app.config import settings
 from app.services import alpaca_service
 from app.services import portfolio_service
+from app.services import recommendation_service
 
 router = APIRouter()
 
@@ -95,3 +96,16 @@ def portfolio_equity_curve(period: str = "1M"):
         return portfolio_service.get_equity_curve(period)
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.get("/recommendations/latest")
+def recommendations_latest():
+    latest = recommendation_service.get_latest_run()
+    if latest is None:
+        return {
+            "run_id": None,
+            "generated_at": None,
+            "cards": [],
+            "sources": {"watchlist": [], "positions": [], "discover": []},
+        }
+    return latest
