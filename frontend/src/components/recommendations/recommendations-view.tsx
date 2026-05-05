@@ -40,7 +40,10 @@ export function RecommendationsView() {
 
   const sorted = useMemo(() => sortCards(cards), [cards]);
   const running = state.status === "running" || state.status === "connecting";
-  const hasAnything = sorted.length > 0 || sources !== null;
+  const totalSources = sources
+    ? sources.watchlist.length + sources.positions.length + sources.discover.length
+    : 0;
+  const hasAnything = sorted.length > 0 || totalSources > 0;
 
   return (
     <div className="flex flex-col">
@@ -94,7 +97,7 @@ export function RecommendationsView() {
         </div>
       )}
 
-      <SourcesStrip sources={sources} />
+      {totalSources > 0 && <SourcesStrip sources={sources} />}
 
       {sorted.length === 0 && !running && !hasAnything && (
         <div className="px-5 py-12 text-center text-[12px] text-[color:var(--fg-mute)]">
