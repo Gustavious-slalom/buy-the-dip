@@ -191,3 +191,34 @@ def test_group_strategies_no_match(seeded_proposals):
          "market_value": 450.0, "unrealized_pl": -50.0, "underlying": "TSLA", "side": "put", "strike": 200.0, "expiry": "2025-06-20"},
     ]
     assert _group_strategies(positions) == []
+
+
+def test_build_snapshot_fixtures_mode(seeded_proposals, monkeypatch):
+    monkeypatch.setenv("FIXTURES_MODE", "1")
+    from app.services import alpaca_service, portfolio_service
+    monkeypatch.setattr(alpaca_service, "get_portfolio", lambda: {"cash": 50000.0, "equity": 100000.0, "buying_power": 100000.0})
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [
+        {"symbol": "NVDA260619C00800000", "qty": 1.0, "avg_entry_price": 12.40},
+        {"symbol": "NVDA260619C00850000", "qty": 1.0, "avg_entry_price": 8.20},
+    ])
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {s: 14.00 if s.endswith("00800000") else 9.00 for s in syms})
+    snap = portfolio_service.build_snapshot()
+    assert snap["account"]["equity"] == 100000.0
+    assert len(snap["positions"]) == 2
+    assert len(snap["strategies"]) == 1
+    assert snap["allocations"]["by_kind"]["cash"] == pytest.approx(50.0, abs=0.01)
+    assert snap["errors"] == []
+    assert "fetched_at" in snap
+    assert isinstance(snap["history"], list)
+
+
+def test_build_snapshot_partial_failure(monkeypatch):
+    from app.services import alpaca_service, portfolio_service
+    monkeypatch.setattr(alpaca_service, "get_portfolio", lambda: {"cash": 50000.0, "equity": 100000.0, "buying_power": 100000.0})
+    def boom(): raise RuntimeError("alpaca down")
+    monkeypatch.setattr(alpaca_service, "get_positions", boom)
+    monkeypatch.setattr(alpaca_service, "get_latest_prices", lambda syms: {})
+    snap = portfolio_service.build_snapshot()
+    assert "positions_unavailable" in snap["errors"]
+    assert snap["positions"] == []
+    assert snap["account"]["equity"] == 100000.0

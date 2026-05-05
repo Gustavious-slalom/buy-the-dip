@@ -155,3 +155,72 @@ def _group_strategies(positions: list[dict]) -> list[dict]:
             "legs_total": len(legs),
         })
     return out
+
+
+def _build_history(limit: int = 20) -> list[dict]:
+    with get_session() as s:
+        rows = s.exec(select(Proposal).order_by(Proposal.created_at.desc()).limit(limit)).all()
+        out = []
+        for p in rows:
+            ex = s.exec(select(Execution).where(Execution.proposal_id == p.id)).first()
+            out.append({
+                "proposal_id": p.id,
+                "ticker": p.ticker,
+                "status": p.status,
+                "created_at": p.created_at.isoformat(),
+                "executed_at": ex.submitted_at.isoformat() if ex else None,
+                "alpaca_order_id": ex.alpaca_order_id if ex else None,
+            })
+        return out
+
+
+def build_snapshot() -> dict:
+    """Return a PortfolioSnapshot. Partial failures captured in `errors` rather than raised."""
+    errors: list[str] = []
+    account: dict = {"cash": None, "equity": None, "buying_power": None, "day_pl": None, "day_pl_pct": None}
+    try:
+        a = alpaca_service.get_portfolio()
+        account.update(a)
+        # day_pl/day_pl_pct not yet exposed by get_portfolio; set null defaults
+        account.setdefault("day_pl", None)
+        account.setdefault("day_pl_pct", None)
+    except Exception:
+        errors.append("account_unavailable")
+
+    raw_positions: list[dict] = []
+    try:
+        raw_positions = alpaca_service.get_positions()
+    except Exception:
+        errors.append("positions_unavailable")
+
+    symbols = [r["symbol"] for r in raw_positions]
+    try:
+        prices = alpaca_service.get_latest_prices(symbols) if symbols else {}
+    except Exception:
+        prices = {s: None for s in symbols}
+        errors.append("prices_unavailable")
+
+    positions = _normalize_positions(raw_positions, prices, account)
+    strategies = []
+    try:
+        strategies = _group_strategies(positions)
+    except Exception:
+        errors.append("strategies_unavailable")
+
+    allocations = _compute_allocations(positions, account)
+
+    history: list[dict] = []
+    try:
+        history = _build_history()
+    except Exception:
+        errors.append("history_unavailable")
+
+    return {
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "account": account,
+        "positions": positions,
+        "strategies": strategies,
+        "allocations": allocations,
+        "history": history,
+        "errors": errors,
+    }
