@@ -37,3 +37,8 @@ class Trace(SQLModel, table=True):
 class Watchlist(SQLModel, table=True):
     ticker: str = Field(primary_key=True)
     added_at: datetime = Field(default_factory=_now)
+
+class RecommendationRun(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    created_at: datetime = Field(default_factory=_now)
+    payload_json: str
