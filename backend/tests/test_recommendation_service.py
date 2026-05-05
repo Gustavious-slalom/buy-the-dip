@@ -458,3 +458,103 @@ async def test_generate_market_brief_truncates_headline(monkeypatch):
     brief = await recommendation_service.generate_market_brief()
     assert brief is not None
     assert len(brief["headline"]) == 100
+
+
+@pytest.mark.asyncio
+async def test_generate_all_includes_market_brief_in_payload(monkeypatch):
+    from app.services import recommendation_service
+    from app.models import Watchlist, RecommendationRun
+    from sqlmodel import SQLModel, create_engine, Session, select as _select
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=["AAPL"], positions=[], discover=[],
+    ))
+
+    fixed_brief = {"bias": "bullish", "headline": "Risk-on", "drivers": ["a", "b"], "updated_at": "2026-05-05T14:00:00Z"}
+
+    async def fake_generate_market_brief():
+        return fixed_brief
+    monkeypatch.setattr(recommendation_service, "generate_market_brief", fake_generate_market_brief)
+
+    async def fake_generate_one(symbol, source):
+        return {"symbol": symbol, "source": source, "bias": "neutral", "confidence": 0.5, "rationale": "r", "top_headlines": []}
+    monkeypatch.setattr(recommendation_service, "generate_one", fake_generate_one)
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+
+    types = [e["type"] for e in emitted]
+    assert "recommendation.market_brief" in types
+    discovery_idx = types.index("recommendation.discovery")
+    brief_idx = types.index("recommendation.market_brief")
+    first_card_idx = types.index("recommendation.card")
+    complete_idx = types.index("recommendation.complete")
+    assert discovery_idx < brief_idx < first_card_idx < complete_idx
+
+    assert payload["market_brief"] == fixed_brief
+
+    with Session(engine) as s:
+        rows = s.exec(_select(RecommendationRun)).all()
+        assert len(rows) == 1
+        import json as _json
+        persisted = _json.loads(rows[0].payload_json)
+        assert persisted["market_brief"] == fixed_brief
+
+
+@pytest.mark.asyncio
+async def test_generate_all_market_brief_warning_when_none(monkeypatch):
+    from app.services import recommendation_service
+    from app.models import Watchlist
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=["AAPL"], positions=[], discover=[],
+    ))
+
+    async def fake_generate_market_brief():
+        return None
+    monkeypatch.setattr(recommendation_service, "generate_market_brief", fake_generate_market_brief)
+
+    async def fake_generate_one(symbol, source):
+        return {"symbol": symbol, "source": source, "bias": "neutral", "confidence": 0.5, "rationale": "r", "top_headlines": []}
+    monkeypatch.setattr(recommendation_service, "generate_one", fake_generate_one)
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+
+    types = [e["type"] for e in emitted]
+    assert "recommendation.market_brief_warning" in types
+    assert "recommendation.market_brief" not in types
+    assert payload["market_brief"] is None

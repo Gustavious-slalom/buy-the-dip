@@ -66,3 +66,12 @@ def test_ws_recommendation_start_flow(client, monkeypatch):
         "recommendation.card",
         "recommendation.complete",
     ]
+
+
+def test_recommendations_latest_empty_includes_market_brief(client, monkeypatch):
+    from app.services import recommendation_service
+    monkeypatch.setattr(recommendation_service, "get_latest_run", lambda: None)
+    r = client.get("/recommendations/latest")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["market_brief"] is None

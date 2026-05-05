@@ -203,11 +203,17 @@ def _evt(type_: str, data: dict | None = None) -> dict:
 
 
 async def generate_all(emit: Callable[[dict], Awaitable[None]]) -> dict:
-    """Orchestrate discovery + per-ticker generation, streaming each event via emit(). Returns the persisted payload."""
+    """Orchestrate discovery + market brief + per-ticker generation, streaming each event via emit(). Returns the persisted payload."""
     candidates = discover_candidates()
     await emit(_evt("recommendation.discovery", {"sources": candidates.to_dict()}))
     if candidates.discovery_error:
         await emit(_evt("recommendation.discovery_warning", {"message": candidates.discovery_error}))
+
+    brief = await generate_market_brief()
+    if brief is not None:
+        await emit(_evt("recommendation.market_brief", brief))
+    else:
+        await emit(_evt("recommendation.market_brief_warning", {"message": "market_brief_unavailable"}))
 
     pairs = candidates.all_with_source()
     if not pairs:
@@ -219,6 +225,7 @@ async def generate_all(emit: Callable[[dict], Awaitable[None]]) -> dict:
             "generated_at": generated_at,
             "cards": [],
             "sources": candidates.to_dict(),
+            "market_brief": brief,
         }
         with get_session() as s:
             s.add(RecommendationRun(id=run_id, payload_json=json.dumps(payload)))
@@ -251,6 +258,7 @@ async def generate_all(emit: Callable[[dict], Awaitable[None]]) -> dict:
         "generated_at": generated_at,
         "cards": cards,
         "sources": candidates.to_dict(),
+        "market_brief": brief,
     }
     with get_session() as s:
         s.add(RecommendationRun(id=run_id, payload_json=json.dumps(payload)))
