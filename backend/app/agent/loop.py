@@ -1,7 +1,7 @@
 # backend/app/agent/loop.py
 import json
 from datetime import datetime, timezone
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropicBedrock
 from app.config import settings
 from app.agent.tools import TOOLS, dispatch
 from app.agent.prompts import SYSTEM_PROMPT
@@ -10,7 +10,10 @@ def _evt(type_: str, **data) -> dict:
     return {"type": type_, "ts": datetime.now(timezone.utc).isoformat(), "data": data}
 
 async def run_session(emit, session_id: str, user_message: str) -> None:
-    client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    client_kwargs: dict = {"aws_region": settings.aws_region}
+    if settings.aws_bearer_token_bedrock:
+        client_kwargs["api_key"] = settings.aws_bearer_token_bedrock
+    client = AsyncAnthropicBedrock(**client_kwargs)
     messages = [{"role": "user", "content": user_message}]
     await emit(_evt("agent.status", message=f"Starting analysis for: {user_message}"))
 

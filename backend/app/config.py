@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    anthropic_api_key: str = ""
+    aws_region: str = "us-east-2"
+    aws_bearer_token_bedrock: str = ""
     alpaca_api_key: str = ""
     alpaca_api_secret: str = ""
     alpaca_base_url: str = "https://paper-api.alpaca.markets"
@@ -10,8 +11,8 @@ class Settings(BaseSettings):
     max_risk_usd: float = 5000.0
     log_level: str = "INFO"
     fixtures_mode: bool = False
-    anthropic_model: str = "claude-sonnet-4-6-20260101"
-    anthropic_haiku_model: str = "claude-haiku-4-5-20251001"
+    anthropic_model: str = "us.anthropic.claude-sonnet-4-6-20260101-v1:0"
+    anthropic_haiku_model: str = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     def assert_paper(self) -> None:

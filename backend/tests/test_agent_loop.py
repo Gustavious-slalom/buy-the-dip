@@ -54,7 +54,7 @@ def test_loop_emits_proposal(monkeypatch):
     final_2 = MagicMock(stop_reason="end_turn",
                         content=[MagicMock(type="text", text="done")])
 
-    with patch("app.agent.loop.AsyncAnthropic") as A:
+    with patch("app.agent.loop.AsyncAnthropicBedrock") as A:
         client = A.return_value
         client.messages.stream.side_effect = [
             _make_stream(["Analyzing ", "AAPL..."], final_1),

@@ -3,11 +3,11 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import finnhub
-from anthropic import Anthropic
+from anthropic import AnthropicBedrock
 from app.config import settings
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
-_anthropic = Anthropic(api_key=settings.anthropic_api_key)
+_anthropic = AnthropicBedrock(aws_region=settings.aws_region)
 
 def get_news(symbol: str, since_days: int = 7) -> dict:
     if settings.fixtures_mode:
