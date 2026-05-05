@@ -86,3 +86,72 @@ def _normalize_positions(raw: list[dict], prices: dict[str, float | None], accou
             pos["expiry"] = occ["expiry"]
         out.append(pos)
     return out
+
+
+def _classify_strategy(legs: list[dict]) -> str:
+    """Best-effort name from leg shape."""
+    if len(legs) == 1:
+        l = legs[0]
+        if l["action"] == "buy":
+            return f"long-{l.get('side', 'option')}"
+        return f"short-{l.get('side', 'option')}"
+    if len(legs) == 2 and legs[0].get("side") == legs[1].get("side"):
+        side = legs[0].get("side", "option")
+        longs = [l for l in legs if l["action"] == "buy"]
+        shorts = [l for l in legs if l["action"] == "sell"]
+        if longs and shorts:
+            net_debit = sum(l["premium"] * l["qty"] for l in longs) - sum(l["premium"] * l["qty"] for l in shorts)
+            direction = "bull" if (side == "call" and net_debit > 0) or (side == "put" and net_debit < 0) else "bear"
+            return f"{direction}-{side}-spread"
+    return "multi-leg"
+
+
+def _group_strategies(positions: list[dict]) -> list[dict]:
+    """For each executed Proposal, build one strategy row from currently-held legs."""
+    pos_by_sym = {p["symbol"]: p for p in positions if p["kind"] == "option"}
+    if not pos_by_sym:
+        return []
+    out: list[dict] = []
+    with get_session() as s:
+        proposals = s.exec(
+            select(Proposal).where(Proposal.status == "executed").order_by(Proposal.created_at.desc())
+        ).all()
+    for p in proposals:
+        legs = json.loads(p.legs_json)
+        leg_syms = [l["contract_symbol"] for l in legs]
+        held = [sym for sym in leg_syms if sym in pos_by_sym]
+        if not held:
+            continue
+        cost_basis = 0.0
+        for l in legs:
+            sign = 1 if l["action"] == "buy" else -1
+            cost_basis += sign * float(l["premium"]) * int(l["qty"]) * 100
+        current_value = 0.0
+        unrealized_pl = 0.0
+        for l in legs:
+            sym = l["contract_symbol"]
+            if sym not in pos_by_sym:
+                continue
+            held_pos = pos_by_sym[sym]
+            sign = 1 if l["action"] == "buy" else -1
+            mv = held_pos.get("market_value")
+            if mv is not None:
+                current_value += sign * float(mv)
+            pl = held_pos.get("unrealized_pl")
+            if pl is not None:
+                unrealized_pl += sign * float(pl)
+        pl_pct = round((unrealized_pl / abs(cost_basis)) * 100.0, 2) if cost_basis != 0 else None
+        out.append({
+            "proposal_id": p.id,
+            "ticker": p.ticker,
+            "type": _classify_strategy(legs),
+            "legs": [{"symbol": l["contract_symbol"], "qty": int(l["qty"]), "side": l["action"]} for l in legs],
+            "cost_basis": round(cost_basis, 2),
+            "current_value": round(current_value, 2) if current_value else 0.0,
+            "unrealized_pl": round(unrealized_pl, 2),
+            "unrealized_pl_pct": pl_pct,
+            "expiry": p.expiry,
+            "legs_open": len(held),
+            "legs_total": len(legs),
+        })
+    return out

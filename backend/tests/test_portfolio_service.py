@@ -91,3 +91,103 @@ def test_normalize_positions_missing_price_yields_nulls():
     assert out[0]["market_value"] is None
     assert out[0]["unrealized_pl"] is None
     assert out[0]["weight_pct"] is None
+
+
+import json as _json
+import uuid
+from sqlmodel import SQLModel, create_engine, Session
+from app.models import Proposal
+
+
+@pytest.fixture
+def seeded_proposals(monkeypatch):
+    """Spin up a fresh in-memory DB and patch get_session to use it."""
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    spread_id = str(uuid.uuid4())
+    long_id = str(uuid.uuid4())
+    with Session(engine) as s:
+        s.add(Proposal(
+            id=spread_id, session_id="sess-1", ticker="NVDA",
+            legs_json=_json.dumps([
+                {"contract_symbol": "NVDA260619C00800000", "qty": 1, "action": "buy", "premium": 12.40, "side": "call", "strike": 800.0},
+                {"contract_symbol": "NVDA260619C00850000", "qty": 1, "action": "sell", "premium": 8.20, "side": "call", "strike": 850.0},
+            ]),
+            max_risk=420.0, max_reward=580.0, breakeven=804.20, expiry="2026-06-19",
+            rationale="bull spread", confidence=0.7, risks_json="[]", status="executed",
+        ))
+        s.add(Proposal(
+            id=long_id, session_id="sess-1", ticker="AAPL",
+            legs_json=_json.dumps([
+                {"contract_symbol": "AAPL250718C00220000", "qty": 1, "action": "buy", "premium": 6.20, "side": "call", "strike": 220.0},
+            ]),
+            max_risk=620.0, max_reward=None, breakeven=226.20, expiry="2025-07-18",
+            rationale="long call", confidence=0.6, risks_json="[]", status="executed",
+        ))
+        s.commit()
+    from contextlib import contextmanager
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    from app.services import portfolio_service
+    monkeypatch.setattr(portfolio_service, "get_session", fake_session)
+    return {"spread_id": spread_id, "long_id": long_id}
+
+
+def test_group_strategies_full_spread_open(seeded_proposals):
+    from app.services.portfolio_service import _group_strategies
+    positions = [
+        {"symbol": "NVDA260619C00800000", "kind": "option", "qty": 1.0, "avg_entry": 12.40, "current_price": 14.00,
+         "market_value": 1400.0, "unrealized_pl": 160.0, "underlying": "NVDA", "side": "call", "strike": 800.0, "expiry": "2026-06-19"},
+        {"symbol": "NVDA260619C00850000", "kind": "option", "qty": 1.0, "avg_entry": 8.20, "current_price": 9.00,
+         "market_value": 900.0, "unrealized_pl": 80.0, "underlying": "NVDA", "side": "call", "strike": 850.0, "expiry": "2026-06-19"},
+    ]
+    groups = _group_strategies(positions)
+    assert len(groups) == 1
+    g = groups[0]
+    assert g["proposal_id"] == seeded_proposals["spread_id"]
+    assert g["ticker"] == "NVDA"
+    assert g["type"] == "bull-call-spread"
+    assert g["legs_open"] == 2 and g["legs_total"] == 2
+    # cost_basis: buy 1240 - sell 820 = 420 (debit)
+    assert g["cost_basis"] == pytest.approx(420.0)
+    # current_value: long leg MV(1400) - short leg MV(900) = 500
+    assert g["current_value"] == pytest.approx(500.0)
+    assert g["unrealized_pl"] == pytest.approx(80.0)
+    assert g["expiry"] == "2026-06-19"
+
+
+def test_group_strategies_partial_spread(seeded_proposals):
+    from app.services.portfolio_service import _group_strategies
+    positions = [
+        {"symbol": "NVDA260619C00800000", "kind": "option", "qty": 1.0, "avg_entry": 12.40, "current_price": 14.00,
+         "market_value": 1400.0, "unrealized_pl": 160.0, "underlying": "NVDA", "side": "call", "strike": 800.0, "expiry": "2026-06-19"},
+    ]
+    groups = _group_strategies(positions)
+    assert len(groups) == 1
+    g = groups[0]
+    assert g["legs_open"] == 1 and g["legs_total"] == 2
+    # current value reflects only the open long leg
+    assert g["current_value"] == pytest.approx(1400.0)
+
+
+def test_group_strategies_long_call(seeded_proposals):
+    from app.services.portfolio_service import _group_strategies
+    positions = [
+        {"symbol": "AAPL250718C00220000", "kind": "option", "qty": 1.0, "avg_entry": 6.20, "current_price": 5.10,
+         "market_value": 510.0, "unrealized_pl": -110.0, "underlying": "AAPL", "side": "call", "strike": 220.0, "expiry": "2025-07-18"},
+    ]
+    groups = _group_strategies(positions)
+    assert len(groups) == 1
+    assert groups[0]["type"] == "long-call"
+    assert groups[0]["legs_total"] == 1
+
+
+def test_group_strategies_no_match(seeded_proposals):
+    from app.services.portfolio_service import _group_strategies
+    positions = [
+        {"symbol": "TSLA250620P00200000", "kind": "option", "qty": 1.0, "avg_entry": 5.0, "current_price": 4.5,
+         "market_value": 450.0, "unrealized_pl": -50.0, "underlying": "TSLA", "side": "put", "strike": 200.0, "expiry": "2025-06-20"},
+    ]
+    assert _group_strategies(positions) == []
