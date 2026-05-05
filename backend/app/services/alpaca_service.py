@@ -162,3 +162,17 @@ def submit_multileg_order(legs: list[dict]) -> dict:
     )
     order = _trading().submit_order(req)
     return {"id": str(order.id), "status": str(order.status), "raw": order.model_dump_json()}
+
+def sell_stock_position(symbol: str, qty: float) -> dict:
+    """Submit a DAY market sell order for `qty` shares of a stock (paper only)."""
+    settings.assert_paper()
+    if settings.fixtures_mode:
+        return {"id": f"fixture-sell-{symbol}", "status": "accepted", "raw": "{}"}
+    req = MarketOrderRequest(
+        symbol=symbol,
+        qty=qty,
+        side=OrderSide.SELL,
+        time_in_force=TimeInForce.DAY,
+    )
+    order = _trading().submit_order(req)
+    return {"id": str(order.id), "status": str(order.status), "raw": order.model_dump_json()}

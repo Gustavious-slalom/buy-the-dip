@@ -11,6 +11,7 @@ from app.models import Proposal, Execution
 from app.config import settings
 from app.services import alpaca_service
 from app.services import portfolio_service
+from app.services import sell_service
 
 router = APIRouter()
 
@@ -95,3 +96,43 @@ def portfolio_equity_curve(period: str = "1M"):
         return portfolio_service.get_equity_curve(period)
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+# ── Sell positions ────────────────────────────────────────────────────────────
+
+class SellBody(BaseModel):
+    symbol: str
+    qty: float
+    avg_entry: float
+
+
+class SellRuleBody(BaseModel):
+    symbol: str
+    take_profit: float = 0.01    # default +1%
+    stop_loss: float = -0.003    # default -0.3%
+    qty: float | None = None
+
+
+@router.post("/positions/sell")
+def sell_position(body: SellBody):
+    try:
+        return sell_service.sell_position(body.symbol, body.qty, body.avg_entry)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@router.post("/positions/rules")
+def set_sell_rule(body: SellRuleBody):
+    rule = sell_service.set_rule(body.symbol, body.take_profit, body.stop_loss, body.qty)
+    return rule.model_dump()
+
+
+@router.delete("/positions/rules/{symbol}")
+def delete_sell_rule(symbol: str):
+    sell_service.delete_rule(symbol)
+    return {"ok": True}
+
+
+@router.get("/positions/rules")
+def list_sell_rules():
+    return [r.model_dump() for r in sell_service.list_rules()]
