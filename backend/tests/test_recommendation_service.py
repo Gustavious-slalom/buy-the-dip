@@ -98,6 +98,96 @@ def test_discover_candidates_handles_general_news_failure(monkeypatch):
     assert cs.discovery_error == "general_news_unavailable"
 
 
+def test_discover_candidates_falls_back_to_text_scan(monkeypatch):
+    """When `related` is empty, scan headlines + summaries against the whitelist."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+    # Empty `related` on every item; tickers only present in headline/summary text.
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "AAPL beats Q3 expectations", "summary": "Apple shines.", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "OPEC cuts production", "summary": "XOM and CVX rally on the news.", "url": "u", "datetime": 2, "related": ""},
+        {"headline": "FED holds rates steady", "summary": "The CEO of JPM weighs in on the IPO market.", "url": "u", "datetime": 3, "related": ""},
+        {"headline": "Random non-ticker headline", "summary": "Nothing relevant.", "url": "u", "datetime": 4, "related": ""},
+    ])
+
+    cs = recommendation_service.discover_candidates()
+    # AAPL, XOM, CVX, JPM should be picked up; FED/CEO/IPO are NOT in the whitelist.
+    assert "AAPL" in cs.discover
+    assert "XOM" in cs.discover
+    assert "CVX" in cs.discover
+    assert "JPM" in cs.discover
+    # False positives must be excluded:
+    for noise in ("FED", "CEO", "IPO", "OPEC", "Q3"):
+        assert noise not in cs.discover
+
+
+def test_discover_candidates_text_scan_dedups_against_watchlist(monkeypatch):
+    """Text-scan tickers that overlap watchlist/positions are skipped (priority preserved)."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from app.models import Watchlist
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "AAPL leads, NVDA close behind", "summary": "Tech bid.", "url": "u", "datetime": 1, "related": ""},
+    ])
+
+    cs = recommendation_service.discover_candidates()
+    assert cs.watchlist == ["AAPL"]
+    assert "AAPL" not in cs.discover  # already in watchlist
+    assert "NVDA" in cs.discover
+
+
+def test_discover_candidates_combines_related_and_text_scan(monkeypatch):
+    """When some items have `related` and others don't, both contribute up to the cap."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "h1", "summary": "s1", "url": "u", "datetime": 1, "related": "AMD"},
+        {"headline": "META and GOOG announce partnership", "summary": "Deal details.", "url": "u", "datetime": 2, "related": ""},
+    ])
+
+    cs = recommendation_service.discover_candidates()
+    # AMD from related; META + GOOG from text scan.
+    assert "AMD" in cs.discover
+    assert "META" in cs.discover
+    assert "GOOG" in cs.discover
+
+
 import json as _json
 from pathlib import Path
 

@@ -21,6 +21,37 @@ DISCOVER_CAP = 5
 PARALLEL_LIMIT = 8
 
 _TICKER_RE = re.compile(r"^[A-Z]{1,5}$")
+_TICKER_TOKEN_RE = re.compile(r"\b[A-Z]{2,5}\b")
+
+# Mid/large-cap whitelist for fallback ticker extraction from headlines + summaries.
+# Finnhub `general_news` items often have empty/sparse `related` fields, so we scan
+# the text for any of these symbols as a fallback. Keep tight to avoid false positives
+# from common all-caps words (CEO, ETF, FED, IPO, etc. — none of which are tickers here).
+_KNOWN_TICKERS: frozenset[str] = frozenset({
+    "AAPL", "MSFT", "GOOG", "GOOGL", "AMZN", "META", "NVDA", "TSLA",
+    "AMD", "INTC", "AVGO", "QCOM", "MU", "ORCL", "CRM", "ADBE", "NFLX",
+    "DIS", "UBER", "LYFT", "SHOP", "SQ", "PYPL", "COIN", "HOOD",
+    "JPM", "BAC", "WFC", "GS", "MS", "C", "V", "MA",
+    "XOM", "CVX", "COP", "OXY",
+    "WMT", "TGT", "COST", "HD", "LOW", "MCD", "SBUX", "NKE", "LULU",
+    "PFE", "MRK", "JNJ", "UNH", "LLY", "ABBV",
+    "BA", "LMT", "GE", "F", "GM",
+    "SPY", "QQQ", "IWM", "DIA", "VTI", "ARKK", "XLK", "XLF", "XLE",
+})
+
+
+def _extract_tickers_from_text(text: str) -> list[str]:
+    """Find whitelisted tickers in free text. Preserves first-occurrence order, deduped."""
+    if not text:
+        return []
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in _TICKER_TOKEN_RE.finditer(text):
+        t = m.group(0)
+        if t in _KNOWN_TICKERS and t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
 
 
 class MalformedRecommendationError(Exception):
@@ -87,6 +118,7 @@ def discover_candidates() -> CandidateSet:
         cs.discovery_error = "general_news_unavailable"
         return cs
 
+    # Pass 1: tickers from each item's `related` field (most reliable when populated).
     for item in items:
         if len(cs.discover) >= DISCOVER_CAP:
             break
@@ -101,6 +133,22 @@ def discover_candidates() -> CandidateSet:
             seen.add(t)
             if len(cs.discover) >= DISCOVER_CAP:
                 break
+
+    # Pass 2: scan headlines + summaries against the whitelist. Finnhub's
+    # `general_news` often returns empty `related` for broad market stories,
+    # so this is the main path in practice.
+    if len(cs.discover) < DISCOVER_CAP:
+        for item in items:
+            if len(cs.discover) >= DISCOVER_CAP:
+                break
+            text = f"{item.get('headline', '')} {item.get('summary', '')}"
+            for t in _extract_tickers_from_text(text):
+                if t in seen:
+                    continue
+                cs.discover.append(t)
+                seen.add(t)
+                if len(cs.discover) >= DISCOVER_CAP:
+                    break
 
     return cs
 
