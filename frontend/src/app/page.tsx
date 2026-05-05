@@ -7,17 +7,20 @@ import { PortfolioPanel } from "@/components/portfolio-panel";
 
 export default function Page() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_380px] gap-4 p-4 h-screen">
-      <aside className="space-y-4">
+    <div
+      className="grid grid-cols-1 lg:grid-cols-[300px_1fr_380px]"
+      style={{ height: "calc(100vh - 36px)" }}
+    >
+      <aside className="overflow-auto border-r border-[color:var(--hairline)] reveal reveal-1">
         <TickerInput />
         <PortfolioPanel />
       </aside>
-      <main className="space-y-4 overflow-auto">
+      <main className="overflow-auto p-5 space-y-5 reveal reveal-2">
         <ProposalCard />
         <PriceChart />
         <OptionsChainTable />
       </main>
-      <aside className="overflow-auto">
+      <aside className="overflow-auto border-l border-[color:var(--hairline)] reveal reveal-3">
         <AgentTrace />
       </aside>
     </div>

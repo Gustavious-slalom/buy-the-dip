@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BUY/THE/DIP · BRUTALIST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bone:#eae6df;
+    --bone-2:#dcd6c8;
+    --black:#111111;
+    --accent:#ff3a20;
+    --pos:#0a8a3a;
+    --shadow:6px 6px 0 var(--black);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+  html,body{height:100%}
+  body{
+    background:var(--bone);
+    color:var(--black);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:12.5px;
+    line-height:1.4;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0 28px, rgba(17,17,17,.025) 28px 29px);
+  }
+  .display{font-family:"Archivo Black",Archivo,sans-serif;letter-spacing:-.01em;text-transform:uppercase}
+  .head-font{font-family:"Archivo",sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.02em}
+
+  /* Top bar */
+  .topbar{
+    border-bottom:2px solid var(--black);
+    background:var(--black);color:var(--bone);
+    padding:8px 18px;display:flex;align-items:center;gap:18px;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .topbar .logo{font-family:"Archivo Black",sans-serif;font-size:14px;letter-spacing:.04em}
+  .topbar .logo span{background:var(--accent);color:var(--black);padding:2px 6px;margin-right:6px}
+  .topbar .clock{font-family:"IBM Plex Mono",mono;letter-spacing:.1em}
+  .topbar .right{margin-left:auto;display:flex;gap:18px;align-items:center}
+  .topbar .right .live{display:inline-flex;align-items:center;gap:6px}
+  .topbar .right .live::before{content:"";width:8px;height:8px;background:var(--accent);animation:bblink 1s steps(2) infinite}
+  @keyframes bblink{50%{opacity:.2}}
+
+  /* Marquee */
+  .marquee{
+    border-bottom:2px solid var(--black);
+    background:var(--accent);color:var(--black);
+    overflow:hidden;white-space:nowrap;padding:6px 0;
+    font-family:"Archivo Black",sans-serif;font-size:13px;letter-spacing:.05em;
+  }
+  .marquee .track{display:inline-block;padding-left:100%;animation:scroll 28s linear infinite}
+  .marquee span{margin:0 24px}
+  .marquee .bullet{display:inline-block;width:10px;height:10px;background:var(--black);margin:0 16px;vertical-align:middle}
+  @keyframes scroll{to{transform:translateX(-100%)}}
+
+  /* Layout */
+  .grid{display:grid;grid-template-columns:300px 1fr 360px;gap:0;border-bottom:2px solid var(--black);min-height:calc(100vh - 86px)}
+  aside,main{padding:22px;overflow:auto}
+  aside{border-right:2px solid var(--black)}
+  aside.right{border-right:none;border-left:2px solid var(--black)}
+
+  .block{
+    border:2px solid var(--black); background:var(--bone);
+    padding:16px; box-shadow:var(--shadow); margin-bottom:22px;
+  }
+  .block h3{
+    font-family:"Archivo Black",sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    margin:-16px -16px 14px;padding:8px 14px;background:var(--black);color:var(--bone);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .block h3 small{font-family:"IBM Plex Mono",mono;font-weight:400;letter-spacing:.1em;color:var(--bone-2);font-size:10.5px;text-transform:none}
+
+  /* Ticker block */
+  .tk-input{
+    border:2px solid var(--black);background:var(--bone-2);
+    padding:10px 12px;display:flex;align-items:center;gap:8px;
+  }
+  .tk-input input{
+    background:transparent;border:0;outline:0;
+    font-family:"Archivo Black",sans-serif;font-size:24px;letter-spacing:.04em;
+    text-transform:uppercase;width:100%;
+  }
+  .tk-input::before{content:"$";font-family:"Archivo Black",sans-serif;font-size:22px}
+  .tk-price{
+    margin-top:14px; font-family:"Archivo Black",sans-serif; font-size:54px; line-height:.95;
+    font-variant-numeric:tabular-nums lining-nums;
+  }
+  .tk-ch{
+    display:inline-block;margin-top:8px;background:var(--pos);color:var(--bone);
+    font-family:"Archivo Black",sans-serif;padding:4px 10px;font-size:13px;letter-spacing:.04em;
+  }
+  .tk-stat{margin-top:14px;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:11.5px}
+  .tk-stat .k{text-transform:uppercase;letter-spacing:.14em;font-weight:600}
+  .tk-stat .v{font-variant-numeric:tabular-nums;text-align:right}
+
+  /* Holdings */
+  .row{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:8px 0;border-top:2px solid var(--black);align-items:center;font-size:12px}
+  .row:first-of-type{border-top:0}
+  .row .sym{font-family:"Archivo Black",sans-serif;font-size:13px;letter-spacing:.04em}
+  .row .qty{font-family:"IBM Plex Mono",mono;font-variant-numeric:tabular-nums}
+  .row .pl{font-family:"Archivo Black",sans-serif;font-variant-numeric:tabular-nums;padding:2px 7px;color:var(--bone)}
+  .pl.up{background:var(--pos)}
+  .pl.dn{background:var(--accent)}
+
+  /* Hero proposal */
+  .hero{
+    border:2px solid var(--black); background:var(--bone);
+    padding:0; margin-bottom:22px; box-shadow:var(--shadow);
+    overflow:hidden; position:relative;
+  }
+  .hero::before{
+    content:"PROPOSAL № 042";position:absolute;top:14px;right:-46px;
+    background:var(--accent);color:var(--black);
+    font-family:"Archivo Black",sans-serif;font-size:11px;letter-spacing:.22em;
+    padding:5px 60px;transform:rotate(45deg);
+  }
+  .hero .top{padding:24px 24px 0}
+  .hero .kicker{font-family:"Archivo Black",sans-serif;font-size:11px;letter-spacing:.22em}
+  .hero .title{
+    font-family:"Archivo Black",sans-serif;
+    font-size:clamp(72px, 10vw, 132px);
+    line-height:.86;letter-spacing:-.02em;margin-top:6px;
+  }
+  .hero .strat{
+    font-family:"Archivo Black",sans-serif;font-size:18px;letter-spacing:.04em;
+    background:var(--black);color:var(--bone);display:inline-block;padding:6px 12px;margin-top:10px;
+  }
+  .hero .strat .acc{color:var(--accent)}
+  .hero .legs{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--black);margin-top:24px}
+  .hero .leg{padding:18px 22px;border-right:2px solid var(--black);position:relative}
+  .hero .leg:last-child{border-right:none}
+  .hero .leg .tag{
+    font-family:"Archivo Black",sans-serif;font-size:11px;letter-spacing:.22em;padding:3px 9px;display:inline-block;
+  }
+  .hero .leg.buy .tag{background:var(--pos);color:var(--bone)}
+  .hero .leg.sell .tag{background:var(--accent);color:var(--black)}
+  .hero .leg .sym{font-family:"IBM Plex Mono",mono;font-size:13px;margin-top:10px;font-weight:600;word-break:break-all}
+  .hero .leg .px{font-family:"Archivo Black",sans-serif;font-size:36px;margin-top:6px;font-variant-numeric:tabular-nums lining-nums}
+  .hero .figs{display:grid;grid-template-columns:repeat(5,1fr);border-top:2px solid var(--black)}
+  .hero .figs > div{padding:14px 12px;text-align:center;border-right:2px solid var(--black)}
+  .hero .figs > div:last-child{border-right:none}
+  .hero .figs .k{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+  .hero .figs .v{font-family:"Archivo Black",sans-serif;font-size:24px;margin-top:4px;font-variant-numeric:tabular-nums lining-nums}
+  .hero .figs .v.up{color:var(--pos)} .hero .figs .v.dn{color:var(--accent)}
+  .hero .actions{display:flex;border-top:2px solid var(--black)}
+  .hero .actions button{
+    flex:1;border:none;border-right:2px solid var(--black);
+    font-family:"Archivo Black",sans-serif;font-size:16px;letter-spacing:.08em;
+    padding:18px 14px;cursor:pointer;background:var(--bone);
+    transition:transform .08s ease;
+  }
+  .hero .actions button:last-child{border-right:none}
+  .hero .actions button:hover{background:var(--bone-2)}
+  .hero .actions button:active{transform:translate(2px,2px)}
+  .hero .actions .approve{background:var(--accent);color:var(--black)}
+  .hero .actions .approve:hover{background:#ff5236}
+  .hero .actions .reject{background:var(--black);color:var(--bone)}
+
+  /* Chart */
+  .chart{
+    border:2px solid var(--black);background:var(--bone);box-shadow:var(--shadow);
+    margin-bottom:22px;
+  }
+  .chart .h{display:flex;align-items:center;padding:10px 14px;background:var(--black);color:var(--bone);font-family:"Archivo Black",sans-serif;letter-spacing:.18em;font-size:11px;text-transform:uppercase}
+  .chart .h .px{margin-left:auto;font-family:"IBM Plex Mono",mono;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;letter-spacing:.04em}
+  .chart svg{display:block;width:100%;height:240px;background:repeating-linear-gradient(0deg, transparent 0 47px, rgba(17,17,17,.06) 47px 48px), repeating-linear-gradient(90deg, transparent 0 79px, rgba(17,17,17,.06) 79px 80px)}
+
+  /* Chain */
+  .chain{border:2px solid var(--black);background:var(--bone);box-shadow:var(--shadow)}
+  .chain .h{padding:10px 14px;background:var(--black);color:var(--bone);font-family:"Archivo Black",sans-serif;letter-spacing:.18em;font-size:11px;text-transform:uppercase;display:flex;justify-content:space-between}
+  table{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",mono;font-variant-numeric:tabular-nums;font-size:12px}
+  th{font-family:"Archivo Black",sans-serif;text-align:right;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:10px 12px;border-bottom:2px solid var(--black);background:var(--bone-2)}
+  th:nth-child(7),td:nth-child(7){text-align:center;background:var(--black);color:var(--bone);border-left:2px solid var(--black);border-right:2px solid var(--black);font-family:"Archivo Black",sans-serif;font-size:13px;letter-spacing:.04em}
+  td{text-align:right;padding:8px 12px;border-bottom:1px solid #00000020}
+  tr:hover td{background:rgba(255,58,32,.08)}
+  td.bid{color:var(--pos);font-weight:600}
+  td.ask{color:var(--accent);font-weight:600}
+
+  /* Trace */
+  .trace .step{
+    border:2px solid var(--black);padding:10px 12px;margin-bottom:-2px;background:var(--bone);
+    display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;
+  }
+  .trace .step.active{background:var(--accent);color:var(--black)}
+  .trace .step.done{background:var(--bone-2)}
+  .trace .step .ts{font-family:"IBM Plex Mono",mono;font-size:10.5px;font-weight:600;padding-top:2px}
+  .trace .step .name{font-family:"Archivo Black",sans-serif;font-size:13px;letter-spacing:.04em}
+  .trace .step .arg{font-family:"IBM Plex Mono",mono;font-size:11px;margin-top:3px;word-break:break-all}
+  .trace .step .ix{font-family:"Archivo Black",sans-serif;font-size:14px;font-weight:900}
+  .think{
+    border:2px solid var(--black);background:var(--black);color:var(--bone);
+    padding:14px;margin-top:14px;font-size:11.5px;line-height:1.55;
+  }
+  .think b{background:var(--accent);color:var(--black);padding:1px 6px;font-family:"Archivo Black",sans-serif;font-size:10px;letter-spacing:.18em;margin-right:6px}
+  .think .cursor{display:inline-block;width:8px;height:13px;background:var(--accent);vertical-align:middle;margin-left:2px;animation:bblink 1s steps(2) infinite}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"><span>BTD</span>BUY/THE/DIP <span style="background:transparent;color:var(--bone-2);margin:0 0 0 8px">v0.4.2</span></div>
+    <div class="clock">10:42:18 ET · MON · 05·MAY·2026</div>
+    <div class="right">
+      <span class="live">AGENT LIVE</span>
+      <span>NYSE OPEN</span>
+      <span>P&amp;L · <span style="color:var(--accent)">+$1,284.20</span></span>
+    </div>
+  </div>
+
+  <div class="marquee"><div class="track">
+    <span>AAPL 245.83 ▲ 0.75%</span><span class="bullet"></span>
+    <span>NVDA 921.40 ▲ 1.22%</span><span class="bullet"></span>
+    <span>SPY 511.07 ▼ 0.18%</span><span class="bullet"></span>
+    <span>QQQ 432.18 ▲ 0.31%</span><span class="bullet"></span>
+    <span>META 512.84 ▲ 0.94%</span><span class="bullet"></span>
+    <span>TSLA 178.55 ▼ 1.04%</span><span class="bullet"></span>
+    <span>AMZN 184.62 ▲ 0.58%</span><span class="bullet"></span>
+    <span>GOOG 168.20 ▲ 0.41%</span><span class="bullet"></span>
+  </div></div>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <aside>
+      <div class="block">
+        <h3>Symbol <small>tap to switch</small></h3>
+        <div class="tk-input"><input value="AAPL"/></div>
+        <div class="tk-price">245.83</div>
+        <div class="tk-ch">▲ +1.84 · +0.75%</div>
+        <div class="tk-stat">
+          <span class="k">Bid/Ask</span><span class="v">245.81 / 245.84</span>
+          <span class="k">Volume</span><span class="v">28.4M</span>
+          <span class="k">Day Range</span><span class="v">243.92—246.40</span>
+          <span class="k">IV Rank</span><span class="v" style="color:var(--accent);font-weight:700">38</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Holdings <small>$124,820</small></h3>
+        <div class="row"><span class="sym">AAPL</span><span class="qty">100</span><span class="pl up">+412.00</span></div>
+        <div class="row"><span class="sym">NVDA 920C</span><span class="qty">3</span><span class="pl up">+186.50</span></div>
+        <div class="row"><span class="sym">SPY 510P</span><span class="qty">5</span><span class="pl dn">−92.10</span></div>
+        <div class="row"><span class="sym">META</span><span class="qty">25</span><span class="pl up">+778.30</span></div>
+      </div>
+
+      <div class="block">
+        <h3>Risk <small>day session</small></h3>
+        <div class="tk-stat">
+          <span class="k">Buying Pwr</span><span class="v">$48,210</span>
+          <span class="k">Used</span><span class="v">$12,400</span>
+          <span class="k">Max Loss</span><span class="v" style="color:var(--accent);font-weight:700">−$5,000</span>
+          <span class="k">Open Ord</span><span class="v">2</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <div class="hero">
+        <div class="top">
+          <div class="kicker">VERTICAL · BULL CALL SPREAD · EXP 5/17</div>
+          <div class="title">A<span style="color:var(--accent)">A</span>PL.</div>
+          <div class="strat">BUY <span class="acc">245C</span> / SELL <span class="acc">250C</span></div>
+        </div>
+        <div class="legs">
+          <div class="leg buy">
+            <span class="tag">BUY · BTO</span>
+            <div class="sym">AAPL250517C00245000</div>
+            <div class="px">$4.85</div>
+          </div>
+          <div class="leg sell">
+            <span class="tag">SELL · STO</span>
+            <div class="sym">AAPL250517C00250000</div>
+            <div class="px">$2.40</div>
+          </div>
+        </div>
+        <div class="figs">
+          <div><div class="k">Net Debit</div><div class="v">$245</div></div>
+          <div><div class="k">Max Profit</div><div class="v up">$255</div></div>
+          <div><div class="k">Max Loss</div><div class="v dn">−$245</div></div>
+          <div><div class="k">B/E</div><div class="v">247.45</div></div>
+          <div><div class="k">Conf.</div><div class="v">0.78</div></div>
+        </div>
+        <div class="actions">
+          <button class="approve">APPROVE ▶</button>
+          <button>EDIT LEGS</button>
+          <button class="reject">REJECT</button>
+        </div>
+      </div>
+
+      <div class="chart">
+        <div class="h">PRICE · 1M <span class="px">245.83 ▲ 0.75%</span></div>
+        <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+          <path fill="rgba(255,58,32,.18)" d="M0,180 L40,170 L80,165 L120,178 L160,150 L200,140 L240,148 L280,130 L320,120 L360,135 L400,110 L440,100 L480,118 L520,90 L560,82 L600,95 L640,70 L680,60 L720,75 L760,55 L800,48 L800,240 L0,240 Z"/>
+          <path fill="none" stroke="#111" stroke-width="3" d="M0,180 L40,170 L80,165 L120,178 L160,150 L200,140 L240,148 L280,130 L320,120 L360,135 L400,110 L440,100 L480,118 L520,90 L560,82 L600,95 L640,70 L680,60 L720,75 L760,55 L800,48"/>
+          <rect x="795" y="43" width="10" height="10" fill="#ff3a20" stroke="#111" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <div class="chain">
+        <div class="h"><span>OPTIONS CHAIN · CALLS</span><span style="font-family:'IBM Plex Mono',mono;font-weight:400;letter-spacing:.08em">EXP 2025·05·17 · 12d</span></div>
+        <table>
+          <thead><tr><th>OI</th><th>VOL</th><th>IV</th><th>Δ</th><th>BID</th><th>ASK</th><th>STRIKE</th></tr></thead>
+          <tbody>
+            <tr><td>1,820</td><td>412</td><td>22.4</td><td>0.86</td><td class="bid">8.20</td><td class="ask">8.35</td><td>240.0</td></tr>
+            <tr><td>3,401</td><td>901</td><td>21.1</td><td>0.71</td><td class="bid">5.65</td><td class="ask">5.80</td><td>242.5</td></tr>
+            <tr style="background:rgba(10,138,58,.12)"><td>4,210</td><td>1,250</td><td>20.6</td><td>0.58</td><td class="bid">4.80</td><td class="ask">4.85</td><td>245.0</td></tr>
+            <tr><td>2,940</td><td>880</td><td>20.2</td><td>0.42</td><td class="bid">3.15</td><td class="ask">3.25</td><td>247.5</td></tr>
+            <tr style="background:rgba(255,58,32,.16)"><td>5,120</td><td>2,011</td><td>20.0</td><td>0.31</td><td class="bid">2.35</td><td class="ask">2.40</td><td>250.0</td></tr>
+            <tr><td>1,704</td><td>503</td><td>20.4</td><td>0.21</td><td class="bid">1.55</td><td class="ask">1.62</td><td>252.5</td></tr>
+            <tr><td>980</td><td>241</td><td>20.9</td><td>0.13</td><td class="bid">0.95</td><td class="ask">1.02</td><td>255.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- RIGHT -->
+    <aside class="right">
+      <div class="block" style="padding:0;background:var(--bone)">
+        <h3 style="margin:0;padding:8px 14px">Agent Trace <small>live · 6/6</small></h3>
+        <div class="trace" style="padding:12px">
+          <div class="step done"><span class="ix">01</span><div><div class="name">get_quote</div><div class="arg">{ticker:"AAPL"} → 245.83</div></div><span class="ts">10:41:02</span></div>
+          <div class="step done"><span class="ix">02</span><div><div class="name">get_news</div><div class="arg">3 articles · sent +0.41</div></div><span class="ts">10:41:04</span></div>
+          <div class="step done"><span class="ix">03</span><div><div class="name">get_chain</div><div class="arg">exp 2025-05-17 · 64ct</div></div><span class="ts">10:41:09</span></div>
+          <div class="step done"><span class="ix">04</span><div><div class="name">iv_rank</div><div class="arg">→ 38</div></div><span class="ts">10:41:14</span></div>
+          <div class="step active"><span class="ix">05</span><div><div class="name">propose_trade ▸</div><div class="arg">structuring vertical 245/250…</div></div><span class="ts">10:41:22</span></div>
+          <div class="step"><span class="ix">06</span><div><div class="name" style="opacity:.5">await_approval</div></div><span class="ts">—</span></div>
+        </div>
+        <div class="think" style="margin:12px;border:2px solid var(--black)">
+          <b>THINK</b>Spot held above 200-EMA on the dip; news net-positive; IV rank moderate — defined-risk debit spread captures upside while capping vega. 245/250 balances breakeven against R:R<span class="cursor"></span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer style="border-top:2px solid var(--black);padding:10px 18px;font-family:'Archivo Black',sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;display:flex;gap:18px">
+    <span>BUY/THE/DIP</span><span>·</span>
+    <span>PAPER ACCOUNT</span><span>·</span>
+    <span style="color:var(--accent)">NOT FINANCIAL ADVICE</span>
+    <span style="margin-left:auto">EST. 2026</span>
+  </footer>
+</body>
+</html>
