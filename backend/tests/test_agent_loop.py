@@ -71,3 +71,17 @@ def test_loop_emits_proposal(monkeypatch):
     # All thinking events carry a `delta` field, not `text`.
     thinking = [e for e in emit.events if e["type"] == "agent.thinking"]
     assert all("delta" in e["data"] for e in thinking)
+
+
+def test_loop_emits_actionable_auth_error():
+    with patch("app.agent.loop.AsyncAnthropic") as A:
+        client = A.return_value
+        client.messages.stream.side_effect = Exception(
+            "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set."
+        )
+        emit = FakeEmit()
+        asyncio.run(run_session(emit, "s1", "analyze AAPL"))
+
+    errors = [e for e in emit.events if e["type"] == "agent.error"]
+    assert len(errors) == 1
+    assert "Anthropic authentication is not configured" in errors[0]["data"]["message"]

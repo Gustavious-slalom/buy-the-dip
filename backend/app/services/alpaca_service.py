@@ -1,4 +1,5 @@
 import json
+import httpx
 from datetime import datetime, timezone
 from math import gcd
 from functools import reduce
@@ -29,6 +30,35 @@ def get_quote(symbol: str) -> dict:
     res = _stock_data().get_stock_latest_quote(req)[symbol]
     mid = (res.bid_price + res.ask_price) / 2
     return {"symbol": symbol, "price": mid, "bid": res.bid_price, "ask": res.ask_price, "ts": res.timestamp.isoformat()}
+
+def get_latest_prices(symbols: list[str]) -> dict[str, float | None]:
+    """Batched mid-price fetch. Stocks → StockLatestQuoteRequest; option contracts (OCC, len>=15) → OptionLatestQuoteRequest."""
+    if not symbols:
+        return {}
+    if settings.fixtures_mode:
+        return {s: 200.0 if len(s) < 15 else 6.50 for s in symbols}
+    stocks = [s for s in symbols if len(s) < 15]
+    opts = [s for s in symbols if len(s) >= 15]
+    out: dict[str, float | None] = {s: None for s in symbols}
+    if stocks:
+        from alpaca.data.requests import StockLatestQuoteRequest
+        try:
+            res = _stock_data().get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=stocks))
+            for sym, q in res.items():
+                if q.bid_price and q.ask_price:
+                    out[sym] = float((q.bid_price + q.ask_price) / 2)
+        except Exception:
+            pass  # leave as None
+    if opts:
+        from alpaca.data.requests import OptionLatestQuoteRequest
+        try:
+            res = _option_data().get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=opts))
+            for sym, q in res.items():
+                if q.bid_price and q.ask_price:
+                    out[sym] = float((q.bid_price + q.ask_price) / 2)
+        except Exception:
+            pass
+    return out
 
 def get_options_chain(symbol: str, expiry: str | None = None) -> dict:
     if settings.fixtures_mode:
@@ -76,6 +106,39 @@ def get_positions() -> list[dict]:
         {"symbol": p.symbol, "qty": float(p.qty), "avg_entry_price": float(p.avg_entry_price)}
         for p in _trading().get_all_positions()
     ]
+
+_PERIOD_MAP = {"1D": ("1D", "5Min"), "1W": ("1W", "15Min"), "1M": ("1M", "1H"), "3M": ("3M", "1D"), "ALL": ("all", "1D")}
+
+def get_portfolio_history(period: str) -> dict:
+    """Returns {period, points: [{t, equity}], base_value, profit_loss, profit_loss_pct}."""
+    if period not in _PERIOD_MAP:
+        raise ValueError(f"invalid period: {period}")
+    if settings.fixtures_mode:
+        raw = json.loads((FIXTURES / "portfolio_history_1m.json").read_text())
+    else:
+        api_period, timeframe = _PERIOD_MAP[period]
+        url = settings.alpaca_base_url.rstrip("/") + "/v2/account/portfolio/history"
+        params = {"period": api_period, "timeframe": timeframe, "extended_hours": "false"}
+        headers = {"APCA-API-KEY-ID": settings.alpaca_api_key, "APCA-API-SECRET-KEY": settings.alpaca_api_secret}
+        with httpx.Client(timeout=10.0) as c:
+            r = c.get(url, params=params, headers=headers)
+            r.raise_for_status()
+            raw = r.json()
+    timestamps = raw.get("timestamp", [])
+    equity = raw.get("equity", [])
+    points = [
+        {"t": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(), "equity": float(eq)}
+        for ts, eq in zip(timestamps, equity) if eq is not None
+    ]
+    pl_list = [x for x in (raw.get("profit_loss") or []) if x is not None]
+    pl_pct_list = [x for x in (raw.get("profit_loss_pct") or []) if x is not None]
+    return {
+        "period": period,
+        "points": points,
+        "base_value": float(raw.get("base_value", 0.0) or 0.0),
+        "profit_loss": float(pl_list[-1]) if pl_list else 0.0,
+        "profit_loss_pct": float(pl_pct_list[-1]) if pl_pct_list else 0.0,
+    }
 
 def submit_multileg_order(legs: list[dict]) -> dict:
     """Caller MUST verify proposal status='approved' before invoking."""

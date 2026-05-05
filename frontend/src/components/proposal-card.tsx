@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "@/lib/session-context";
 import { approveProposal, rejectProposal } from "@/lib/api";
+import { emitPortfolioInvalidate } from "@/lib/portfolio-events";
 import { useState } from "react";
 
 const fmtUsd = (n: number | null | undefined) =>
@@ -117,6 +118,7 @@ export function ProposalCard() {
             try {
               const r = await approveProposal(proposal.proposal_id);
               setResult(`Order ${r.alpaca_order_id} · ${r.status}`);
+              emitPortfolioInvalidate();
             } catch (e) {
               setResult(`Error: ${(e as Error).message}`);
             } finally {
@@ -134,6 +136,7 @@ export function ProposalCard() {
             try {
               await rejectProposal(proposal.proposal_id);
               setResult("Rejected");
+              emitPortfolioInvalidate();
             } catch (e) {
               setResult(`Error: ${(e as Error).message}`);
             } finally {
