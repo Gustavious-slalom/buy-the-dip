@@ -1,7 +1,7 @@
 "use client";
 import type { HistoryRow } from "@/types/portfolio";
 
-type Props = { history: HistoryRow[]; loading: boolean; error: string | null };
+type Props = { rows: HistoryRow[]; loading: boolean; error: string | null };
 
 const STATUS_COLOR: Record<HistoryRow["status"], string> = {
   pending: "var(--fg-dim)",
@@ -24,7 +24,7 @@ function fmtDt(iso: string | null) {
   });
 }
 
-export function HistoryTable({ history, loading, error }: Props) {
+export function HistoryTable({ rows, loading, error }: Props) {
   return (
     <section className="px-5 py-5 border-b border-[color:var(--hairline)]">
       <h2 className="smallcaps panel-rule mb-4">History</h2>
@@ -32,7 +32,7 @@ export function HistoryTable({ history, loading, error }: Props) {
         <div className="text-[12px] text-[color:var(--down)]">Couldn’t load history — {error}</div>
       ) : loading ? (
         <div className="text-[12px] text-[color:var(--fg-mute)] font-mono">loading…</div>
-      ) : history.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="text-[12px] text-[color:var(--fg-mute)] font-mono">No proposals yet.</div>
       ) : (
         <table className="w-full text-[12.5px] font-mono">
@@ -46,7 +46,7 @@ export function HistoryTable({ history, loading, error }: Props) {
             </tr>
           </thead>
           <tbody>
-            {history.map(h => (
+            {rows.map(h => (
               <tr key={h.proposal_id} className="border-t border-[color:var(--hairline)]">
                 <td className="py-1.5 text-[color:var(--fg-dim)]">{fmtDt(h.created_at)}</td>
                 <td>{h.ticker}</td>
