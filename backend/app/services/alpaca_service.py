@@ -30,6 +30,35 @@ def get_quote(symbol: str) -> dict:
     mid = (res.bid_price + res.ask_price) / 2
     return {"symbol": symbol, "price": mid, "bid": res.bid_price, "ask": res.ask_price, "ts": res.timestamp.isoformat()}
 
+def get_latest_prices(symbols: list[str]) -> dict[str, float | None]:
+    """Batched mid-price fetch. Stocks → StockLatestQuoteRequest; option contracts (OCC, len>=15) → OptionLatestQuoteRequest."""
+    if not symbols:
+        return {}
+    if settings.fixtures_mode:
+        return {s: 200.0 if len(s) < 15 else 6.50 for s in symbols}
+    stocks = [s for s in symbols if len(s) < 15]
+    opts = [s for s in symbols if len(s) >= 15]
+    out: dict[str, float | None] = {s: None for s in symbols}
+    if stocks:
+        from alpaca.data.requests import StockLatestQuoteRequest
+        try:
+            res = _stock_data().get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=stocks))
+            for sym, q in res.items():
+                if q.bid_price and q.ask_price:
+                    out[sym] = float((q.bid_price + q.ask_price) / 2)
+        except Exception:
+            pass  # leave as None
+    if opts:
+        from alpaca.data.requests import OptionLatestQuoteRequest
+        try:
+            res = _option_data().get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=opts))
+            for sym, q in res.items():
+                if q.bid_price and q.ask_price:
+                    out[sym] = float((q.bid_price + q.ask_price) / 2)
+        except Exception:
+            pass
+    return out
+
 def get_options_chain(symbol: str, expiry: str | None = None) -> dict:
     if settings.fixtures_mode:
         # Fixture is always AAPL data; symbol arg is intentionally ignored in offline mode
