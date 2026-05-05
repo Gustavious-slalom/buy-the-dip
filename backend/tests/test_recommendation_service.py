@@ -96,3 +96,97 @@ def test_discover_candidates_handles_general_news_failure(monkeypatch):
     assert cs.positions == []
     assert cs.discover == []
     assert cs.discovery_error == "general_news_unavailable"
+
+
+import json as _json
+from pathlib import Path
+
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+@pytest.mark.asyncio
+async def test_generate_one_happy_path(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    canned = (FIXTURES_DIR / "recommendation_response.json").read_text()
+    monkeypatch.setattr(alpaca_service, "get_quote", lambda sym: {"symbol": sym, "price": 920.5, "bid": 920.4, "ask": 920.6, "ts": "2026-05-05T14:00:00Z"})
+    monkeypatch.setattr(news_service, "get_news", lambda sym, since_days=7: {
+        "symbol": sym,
+        "items": [
+            {"headline": "NVDA Q3 beats on data-center growth", "summary": "Record numbers.", "url": "https://example.com/a", "datetime": 1},
+            {"headline": "Wall St raises NVDA target to $1,250", "summary": "Analysts bullish.", "url": "https://example.com/b", "datetime": 2},
+        ],
+        "summary": "",
+    })
+
+    captured = []
+    class FakeMessages:
+        async def create(self, **kwargs):
+            captured.append(kwargs)
+            class Block:
+                text = canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    card = await recommendation_service.generate_one("NVDA", "watchlist")
+    assert card["symbol"] == "NVDA"
+    assert card["source"] == "watchlist"
+    assert card["bias"] == "bullish"
+    assert 0 <= card["confidence"] <= 1
+    assert len(card["rationale"]) <= 280
+    assert len(card["top_headlines"]) == 2
+    assert card["top_headlines"][0]["url"] == "https://example.com/a"
+    assert "error" not in card
+    assert len(captured) == 1
+
+
+@pytest.mark.asyncio
+async def test_generate_one_retries_on_malformed(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_quote", lambda sym: {"symbol": sym, "price": 100.0, "bid": 100, "ask": 100, "ts": "x"})
+    monkeypatch.setattr(news_service, "get_news", lambda sym, since_days=7: {"symbol": sym, "items": [{"headline": "X", "summary": "", "url": "u", "datetime": 1}], "summary": ""})
+
+    canned = (FIXTURES_DIR / "recommendation_response.json").read_text()
+    call_count = {"n": 0}
+    class FakeMessages:
+        async def create(self, **kwargs):
+            call_count["n"] += 1
+            class Block:
+                text = "this is not json" if call_count["n"] == 1 else canned
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    card = await recommendation_service.generate_one("AAPL", "watchlist")
+    assert call_count["n"] == 2
+    assert card["bias"] == "bullish"
+
+
+@pytest.mark.asyncio
+async def test_generate_one_persistent_failure_raises(monkeypatch):
+    from app.services import recommendation_service, alpaca_service, news_service
+    monkeypatch.setattr(alpaca_service, "get_quote", lambda sym: {"symbol": sym, "price": 100.0, "bid": 100, "ask": 100, "ts": "x"})
+    monkeypatch.setattr(news_service, "get_news", lambda sym, since_days=7: {"symbol": sym, "items": [], "summary": ""})
+
+    class FakeMessages:
+        async def create(self, **kwargs):
+            class Block:
+                text = "still not json"
+                type = "text"
+            class Msg:
+                content = [Block()]
+            return Msg()
+    class FakeClient:
+        messages = FakeMessages()
+    monkeypatch.setattr(recommendation_service, "_anthropic", FakeClient())
+
+    with pytest.raises(recommendation_service.MalformedRecommendationError):
+        await recommendation_service.generate_one("AAPL", "watchlist")

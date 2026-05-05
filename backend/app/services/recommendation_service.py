@@ -103,3 +103,92 @@ def discover_candidates() -> CandidateSet:
                 break
 
     return cs
+
+
+def _new_anthropic() -> AsyncAnthropic:
+    api_key = (settings.anthropic_api_key or "").strip()
+    if api_key:
+        return AsyncAnthropic(api_key=api_key)
+    return AsyncAnthropic()
+
+
+_anthropic: AsyncAnthropic = _new_anthropic()
+
+
+def _parse_card_json(text: str) -> dict:
+    """Strict parse + shape validation. Raises ValueError if invalid."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if "\n" in cleaned:
+            cleaned = cleaned.split("\n", 1)[1]
+        cleaned = cleaned.rsplit("```", 1)[0]
+    obj = json.loads(cleaned)
+    if not isinstance(obj, dict):
+        raise ValueError("not an object")
+    if obj.get("bias") not in ("bullish", "bearish", "neutral"):
+        raise ValueError("bad bias")
+    conf = obj.get("confidence")
+    if not isinstance(conf, (int, float)) or not 0 <= conf <= 1:
+        raise ValueError("bad confidence")
+    if not isinstance(obj.get("rationale"), str):
+        raise ValueError("bad rationale")
+    headlines = obj.get("top_headlines")
+    if not isinstance(headlines, list) or not all(isinstance(h, str) for h in headlines):
+        raise ValueError("bad top_headlines")
+    return obj
+
+
+def _resolve_headlines(model_headlines: list[str], news_items: list[dict]) -> list[dict]:
+    """Match model-returned headline strings back to {headline, url} via the news items."""
+    by_text = {i["headline"]: i for i in news_items}
+    out = []
+    for h in model_headlines[:3]:
+        item = by_text.get(h)
+        if item:
+            out.append({"headline": item["headline"], "url": item["url"]})
+    return out
+
+
+async def generate_one(symbol: str, source: str) -> dict:
+    """Per-ticker mini-agent. Returns a recommendation card or raises MalformedRecommendationError."""
+    loop = asyncio.get_running_loop()
+    quote = await loop.run_in_executor(None, alpaca_service.get_quote, symbol)
+    news = await loop.run_in_executor(None, news_service.get_news, symbol)
+    items = news.get("items") or []
+    user_msg = recommendation_prompt.build_user_message(
+        symbol=symbol, quote_price=float(quote.get("price") or 0.0), news_items=items
+    )
+    messages = [{"role": "user", "content": user_msg}]
+
+    async def call(messages_arg: list[dict]) -> str:
+        resp = await _anthropic.messages.create(
+            model=settings.anthropic_haiku_model,
+            max_tokens=400,
+            system=recommendation_prompt.SYSTEM_PROMPT,
+            messages=messages_arg,
+        )
+        return resp.content[0].text if resp.content else ""
+
+    raw = await call(messages)
+    try:
+        parsed = _parse_card_json(raw)
+    except (ValueError, json.JSONDecodeError):
+        retry_messages = messages + [
+            {"role": "assistant", "content": raw},
+            {"role": "user", "content": recommendation_prompt.build_strict_retry_message()},
+        ]
+        raw2 = await call(retry_messages)
+        try:
+            parsed = _parse_card_json(raw2)
+        except (ValueError, json.JSONDecodeError) as e:
+            raise MalformedRecommendationError(f"unparseable_response: {e}")
+
+    return {
+        "symbol": symbol,
+        "source": source,
+        "bias": parsed["bias"],
+        "confidence": round(float(parsed["confidence"]), 2),
+        "rationale": parsed["rationale"][:280],
+        "top_headlines": _resolve_headlines(parsed["top_headlines"], items),
+    }
