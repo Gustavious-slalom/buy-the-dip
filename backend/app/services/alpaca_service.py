@@ -117,7 +117,7 @@ def get_portfolio_history(period: str) -> dict:
         raw = json.loads((FIXTURES / "portfolio_history_1m.json").read_text())
     else:
         api_period, timeframe = _PERIOD_MAP[period]
-        url = settings.alpaca_base_url.rstrip("/") + "/v2/account/portfolio/history"
+        url = settings.alpaca_base_url.rstrip("/") + "/account/portfolio/history"
         params = {"period": api_period, "timeframe": timeframe, "extended_hours": "false"}
         headers = {"APCA-API-KEY-ID": settings.alpaca_api_key, "APCA-API-SECRET-KEY": settings.alpaca_api_secret}
         with httpx.Client(timeout=10.0) as c:
