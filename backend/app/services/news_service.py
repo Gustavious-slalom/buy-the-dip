@@ -32,3 +32,20 @@ def get_news(symbol: str, since_days: int = 7) -> dict:
         except Exception:
             pass  # degrade gracefully — agent still gets raw news items
     return {"symbol": symbol, "items": items, "summary": summary}
+
+def get_general_news() -> list[dict]:
+    """Market-wide news. Returns up to 30 items with {headline, summary, url, datetime, related}."""
+    if settings.fixtures_mode:
+        return json.loads((FIXTURES / "general_news.json").read_text())
+    client = finnhub.Client(api_key=settings.finnhub_api_key)
+    raw = client.general_news("general")[:30]
+    return [
+        {
+            "headline": i["headline"],
+            "summary": i.get("summary", ""),
+            "url": i["url"],
+            "datetime": i["datetime"],
+            "related": i.get("related", ""),
+        }
+        for i in raw
+    ]

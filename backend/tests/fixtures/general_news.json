@@ -1,0 +1,8 @@
+[
+  {"headline": "NVDA Q3 beats on data-center growth", "summary": "Nvidia reports record Q3.", "url": "https://example.com/nvda-q3", "datetime": 1714521600, "related": "NVDA"},
+  {"headline": "Wall St raises NVDA target to $1,250", "summary": "Several banks lift price target.", "url": "https://example.com/nvda-target", "datetime": 1714525200, "related": "NVDA"},
+  {"headline": "TSLA misses Q3 deliveries", "summary": "Below consensus by 5%.", "url": "https://example.com/tsla-deliv", "datetime": 1714528800, "related": "TSLA"},
+  {"headline": "AMD launches new datacenter chip", "summary": "Targets enterprise AI workloads.", "url": "https://example.com/amd-mi400", "datetime": 1714532400, "related": "AMD"},
+  {"headline": "META announces ad revenue growth", "summary": "Q3 ads up 18% YoY.", "url": "https://example.com/meta-ads", "datetime": 1714536000, "related": "META"},
+  {"headline": "Coinbase partners with major bank", "summary": "Custody deal expands footprint.", "url": "https://example.com/coin-bank", "datetime": 1714539600, "related": "COIN"}
+]
