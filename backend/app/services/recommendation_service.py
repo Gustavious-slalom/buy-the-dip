@@ -192,3 +192,80 @@ async def generate_one(symbol: str, source: str) -> dict:
         "rationale": parsed["rationale"][:280],
         "top_headlines": _resolve_headlines(parsed["top_headlines"], items),
     }
+
+
+def _evt(type_: str, data: dict | None = None) -> dict:
+    return {
+        "type": type_,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "data": data or {},
+    }
+
+
+async def generate_all(emit: Callable[[dict], Awaitable[None]]) -> dict:
+    """Orchestrate discovery + per-ticker generation, streaming each event via emit(). Returns the persisted payload."""
+    candidates = discover_candidates()
+    await emit(_evt("recommendation.discovery", {"sources": candidates.to_dict()}))
+    if candidates.discovery_error:
+        await emit(_evt("recommendation.discovery_warning", {"message": candidates.discovery_error}))
+
+    pairs = candidates.all_with_source()
+    if not pairs:
+        await emit(_evt("recommendation.discovery_warning", {"message": "no_candidates"}))
+        run_id = str(uuid.uuid4())
+        generated_at = datetime.now(timezone.utc).isoformat()
+        payload = {
+            "run_id": run_id,
+            "generated_at": generated_at,
+            "cards": [],
+            "sources": candidates.to_dict(),
+        }
+        with get_session() as s:
+            s.add(RecommendationRun(id=run_id, payload_json=json.dumps(payload)))
+            s.commit()
+        await emit(_evt("recommendation.complete", {"run_id": run_id, "generated_at": generated_at, "count": 0}))
+        return payload
+
+    semaphore = asyncio.Semaphore(PARALLEL_LIMIT)
+
+    async def _bounded(symbol: str, source: str) -> dict:
+        async with semaphore:
+            try:
+                return await generate_one(symbol, source)
+            except MalformedRecommendationError:
+                return {"symbol": symbol, "source": source, "error": "unparseable_response"}
+            except Exception as e:
+                return {"symbol": symbol, "source": source, "error": str(e)[:80] or "unknown_error"}
+
+    tasks = [asyncio.create_task(_bounded(sym, src)) for sym, src in pairs]
+    cards: list[dict] = []
+    for coro in asyncio.as_completed(tasks):
+        card = await coro
+        cards.append(card)
+        await emit(_evt("recommendation.card", card))
+
+    run_id = str(uuid.uuid4())
+    generated_at = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "run_id": run_id,
+        "generated_at": generated_at,
+        "cards": cards,
+        "sources": candidates.to_dict(),
+    }
+    with get_session() as s:
+        s.add(RecommendationRun(id=run_id, payload_json=json.dumps(payload)))
+        s.commit()
+    await emit(_evt("recommendation.complete", {"run_id": run_id, "generated_at": generated_at, "count": len(cards)}))
+    return payload
+
+
+def get_latest_run() -> dict | None:
+    with get_session() as s:
+        row = s.exec(
+            select(RecommendationRun).order_by(RecommendationRun.created_at.desc()).limit(1)
+        ).first()
+        if row is None:
+            return None
+        payload = json.loads(row.payload_json)
+        payload.setdefault("run_id", row.id)
+        return payload

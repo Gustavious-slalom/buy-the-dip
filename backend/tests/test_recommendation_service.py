@@ -190,3 +190,132 @@ async def test_generate_one_persistent_failure_raises(monkeypatch):
 
     with pytest.raises(recommendation_service.MalformedRecommendationError):
         await recommendation_service.generate_one("AAPL", "watchlist")
+
+
+@pytest.mark.asyncio
+async def test_generate_all_streams_and_persists(monkeypatch):
+    """Discovery → cards stream in finish order → run is persisted; error cards still flow through."""
+    from app.services import recommendation_service
+    from app.models import Watchlist, RecommendationRun
+    from sqlmodel import SQLModel, create_engine, Session, select as _select
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as s:
+        s.add(Watchlist(ticker="AAPL"))
+        s.add(Watchlist(ticker="NVDA"))
+        s.add(Watchlist(ticker="TSLA"))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=["AAPL", "NVDA", "TSLA"], positions=[], discover=[],
+    ))
+
+    async def fake_generate_one(symbol, source):
+        if symbol == "TSLA":
+            raise recommendation_service.MalformedRecommendationError("unparseable_response")
+        return {
+            "symbol": symbol, "source": source, "bias": "bullish",
+            "confidence": 0.6, "rationale": f"r-{symbol}", "top_headlines": [],
+        }
+    monkeypatch.setattr(recommendation_service, "generate_one", fake_generate_one)
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+
+    types = [e["type"] for e in emitted]
+    assert types[0] == "recommendation.discovery"
+    assert types.count("recommendation.card") == 3
+    assert types[-1] == "recommendation.complete"
+
+    assert {c["symbol"] for c in payload["cards"]} == {"AAPL", "NVDA", "TSLA"}
+    tsla = next(c for c in payload["cards"] if c["symbol"] == "TSLA")
+    assert "error" in tsla and tsla["error"] == "unparseable_response"
+
+    with Session(engine) as s:
+        rows = s.exec(_select(RecommendationRun)).all()
+        assert len(rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_generate_all_no_candidates_emits_warning(monkeypatch):
+    from app.services import recommendation_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    monkeypatch.setattr(recommendation_service, "discover_candidates", lambda: recommendation_service.CandidateSet(
+        watchlist=[], positions=[], discover=[],
+    ))
+
+    emitted: list[dict] = []
+    async def emit(evt: dict):
+        emitted.append(evt)
+
+    payload = await recommendation_service.generate_all(emit)
+    types = [e["type"] for e in emitted]
+    assert "recommendation.discovery_warning" in types
+    assert types[-1] == "recommendation.complete"
+    assert payload["cards"] == []
+
+
+def test_get_latest_run_returns_most_recent(monkeypatch):
+    from app.services import recommendation_service
+    from app.models import RecommendationRun
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+    import time
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    with Session(engine) as s:
+        s.add(RecommendationRun(id="old", payload_json='{"cards": [], "sources": {"watchlist": [], "positions": [], "discover": []}}'))
+        s.commit()
+        time.sleep(0.01)
+        s.add(RecommendationRun(id="new", payload_json='{"cards": [{"symbol":"NVDA"}], "sources": {"watchlist": [], "positions": [], "discover": []}}'))
+        s.commit()
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    latest = recommendation_service.get_latest_run()
+    assert latest is not None
+    assert latest["run_id"] == "new"
+    assert latest["cards"][0]["symbol"] == "NVDA"
+
+
+def test_get_latest_run_empty(monkeypatch):
+    from app.services import recommendation_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+
+    assert recommendation_service.get_latest_run() is None
