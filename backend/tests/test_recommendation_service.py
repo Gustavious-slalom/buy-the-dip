@@ -98,6 +98,116 @@ def test_discover_candidates_handles_general_news_failure(monkeypatch):
     assert cs.discovery_error == "general_news_unavailable"
 
 
+def test_discover_candidates_falls_back_to_text_scan_when_related_empty(monkeypatch):
+    """Live Finnhub general_news returns macro headlines with empty `related`. Fall back to scanning headline+summary against a known-ticker whitelist."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "Apple results push AAPL to record high", "summary": "", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "NVDA chips dominate AI workloads", "summary": "Earnings beat.", "url": "u", "datetime": 2, "related": ""},
+        {"headline": "Generic geopolitical news", "summary": "no tickers here", "url": "u", "datetime": 3, "related": ""},
+        {"headline": "TSLA delivery miss disappoints", "summary": "Below consensus.", "url": "u", "datetime": 4, "related": ""},
+    ])
+    cs = recommendation_service.discover_candidates()
+    # AAPL, NVDA, TSLA are well-known tickers in the whitelist; "Apple" the word is not.
+    assert "AAPL" in cs.discover
+    assert "NVDA" in cs.discover
+    assert "TSLA" in cs.discover
+
+
+def test_discover_candidates_text_scan_ignores_non_whitelisted_words(monkeypatch):
+    """Random capital words must not become tickers."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "UN and US push UN-backed maritime coalition", "summary": "", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "OPEC and IRAN tensions rise", "summary": "", "url": "u", "datetime": 2, "related": ""},
+    ])
+    cs = recommendation_service.discover_candidates()
+    # "UN", "US", "OPEC", "IRAN" are not tradeable tickers — must not appear.
+    assert "UN" not in cs.discover
+    assert "US" not in cs.discover
+    assert "OPEC" not in cs.discover
+    assert "IRAN" not in cs.discover
+
+
+def test_discover_candidates_text_scan_resolves_company_names(monkeypatch):
+    """Live headlines often use company names ('Apple', 'Tesla') instead of tickers."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "Intel and Micron poised to break milestones", "summary": "", "url": "u", "datetime": 1, "related": ""},
+        {"headline": "Apple results impress; Tesla deliveries miss", "summary": "Boeing also up.", "url": "u", "datetime": 2, "related": ""},
+    ])
+    cs = recommendation_service.discover_candidates()
+    assert "INTC" in cs.discover  # "Intel"
+    assert "MU" in cs.discover    # "Micron"
+    assert "AAPL" in cs.discover  # "Apple"
+    assert "TSLA" in cs.discover  # "Tesla"
+    assert "BA" in cs.discover    # "Boeing"
+
+
+def test_discover_candidates_uses_related_first_then_text(monkeypatch):
+    """If `related` has tickers, use those; only fall back to text scan when empty."""
+    from app.services import recommendation_service, news_service, alpaca_service
+    from sqlmodel import SQLModel, create_engine, Session
+    from contextlib import contextmanager
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(engine)
+
+    @contextmanager
+    def fake_session():
+        with Session(engine) as ses:
+            yield ses
+    monkeypatch.setattr(recommendation_service, "get_session", fake_session)
+    monkeypatch.setattr(alpaca_service, "get_positions", lambda: [])
+
+    monkeypatch.setattr(news_service, "get_general_news", lambda: [
+        {"headline": "Earnings season heats up — NVDA in focus", "summary": "", "url": "u", "datetime": 1, "related": "AMD"},
+    ])
+    cs = recommendation_service.discover_candidates()
+    # `related` had AMD, so AMD wins for this item; NVDA is NOT scanned (text fallback only when related empty).
+    assert "AMD" in cs.discover
+    assert "NVDA" not in cs.discover
+
+
 import json as _json
 from pathlib import Path
 

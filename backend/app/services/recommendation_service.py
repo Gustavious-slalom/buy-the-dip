@@ -22,6 +22,96 @@ PARALLEL_LIMIT = 8
 
 _TICKER_RE = re.compile(r"^[A-Z]{1,5}$")
 
+# Used by the headline/summary text-scan fallback when Finnhub `related` is empty.
+_TICKER_TEXT_RE = re.compile(r"\b[A-Z]{2,5}\b")
+
+# Curated whitelist of tradeable US tickers. Only matters for the text-scan fallback,
+# so capital-letter words like "UN", "OPEC", "AI", "CEO" don't slip through.
+# Conservative by design — false positives are worse than false negatives.
+_DISCOVER_TICKER_WHITELIST: frozenset[str] = frozenset({
+    # Big tech
+    "AAPL", "MSFT", "GOOGL", "GOOG", "META", "AMZN", "TSLA", "NVDA",
+    "AMD", "INTC", "ORCL", "CRM", "ADBE", "AVGO", "QCOM", "CSCO",
+    "IBM", "TXN", "MU", "AMAT", "LRCX", "ASML", "ARM", "TSM", "MRVL",
+    "KLAC", "ANET", "SMCI", "DELL", "HPE", "PLTR",
+    # Finance
+    "JPM", "BAC", "WFC", "GS", "MS", "BLK", "AXP", "V", "MA",
+    "PYPL", "COIN", "SQ", "HOOD", "SCHW",
+    # Healthcare
+    "JNJ", "PFE", "MRK", "UNH", "ABBV", "LLY", "NVO", "AZN", "TMO",
+    "ABT", "CVS", "BMY", "GILD", "REGN", "VRTX", "BIIB", "BNTX", "MRNA",
+    # Consumer
+    "WMT", "HD", "COST", "NKE", "MCD", "SBUX", "KO", "PEP", "PG",
+    "DIS", "NFLX", "UBER", "ABNB", "BKNG", "LULU", "TGT", "LOW",
+    # Energy
+    "XOM", "CVX", "COP", "OXY", "EOG", "SLB", "PSX",
+    # Industrials / transport
+    "BA", "CAT", "GE", "HON", "LMT", "RTX", "UPS", "FDX",
+    # Auto / EV
+    "F", "GM", "RIVN", "LCID", "NIO", "LI", "XPEV",
+    # Telecom / media
+    "VZ", "TMUS", "CMCSA", "CHTR", "PARA",
+    # Crypto-adjacent
+    "MSTR", "RIOT", "MARA",
+    # International ADRs / e-commerce
+    "BABA", "JD", "PDD", "SHOP", "SE", "MELI",
+    # ETFs / indices
+    "SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "EFA", "EEM", "ARKK",
+    "XLF", "XLE", "XLK", "XLV", "XLY", "XLP", "XLU", "XLB", "XLI", "XLRE",
+    "GLD", "SLV", "TLT", "HYG", "UVXY",
+})
+
+
+# Company-name → ticker map for headlines that mention a company by name rather than
+# by ticker symbol. Live Finnhub general_news typically uses names ("Apple", "Tesla"),
+# so this is the bigger source of matches in production. Lower-cased keys; words must
+# appear as whole words in the headline/summary text.
+_COMPANY_NAME_TO_TICKER: dict[str, str] = {
+    "apple": "AAPL", "microsoft": "MSFT", "google": "GOOGL", "alphabet": "GOOGL",
+    "meta": "META", "facebook": "META", "amazon": "AMZN", "tesla": "TSLA",
+    "nvidia": "NVDA", "intel": "INTC", "micron": "MU", "broadcom": "AVGO",
+    "qualcomm": "QCOM", "oracle": "ORCL", "salesforce": "CRM", "adobe": "ADBE",
+    "netflix": "NFLX", "uber": "UBER", "airbnb": "ABNB", "shopify": "SHOP",
+    "palantir": "PLTR", "coinbase": "COIN", "robinhood": "HOOD",
+    "jpmorgan": "JPM", "goldman": "GS", "morgan stanley": "MS",
+    "boeing": "BA", "ford": "F", "rivian": "RIVN", "lucid": "LCID",
+    "disney": "DIS", "starbucks": "SBUX", "walmart": "WMT", "costco": "COST",
+    "exxon": "XOM", "chevron": "CVX",
+    "alibaba": "BABA", "tsmc": "TSM",
+}
+
+# Pre-compiled word-boundary patterns (case-insensitive) for the company-name map.
+# Multi-word names ("morgan stanley") need a slightly different boundary.
+_COMPANY_NAME_RE = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in _COMPANY_NAME_TO_TICKER) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _extract_text_tickers(item: dict) -> list[str]:
+    """Scan headline + summary for tickers via two paths:
+    1. Whitelisted ticker symbols ("NVDA", "AAPL") via _TICKER_TEXT_RE.
+    2. Common company names ("Apple", "Tesla") via _COMPANY_NAME_TO_TICKER.
+    Order-preserving by first appearance in text; deduped."""
+    text = f"{item.get('headline', '')} {item.get('summary', '')}"
+    out: list[str] = []
+    seen_local: set[str] = set()
+
+    # Pass 1: ticker symbols.
+    for token in _TICKER_TEXT_RE.findall(text):
+        if token in _DISCOVER_TICKER_WHITELIST and token not in seen_local:
+            out.append(token)
+            seen_local.add(token)
+
+    # Pass 2: company names → tickers.
+    for match in _COMPANY_NAME_RE.findall(text):
+        ticker = _COMPANY_NAME_TO_TICKER.get(match.lower())
+        if ticker and ticker not in seen_local:
+            out.append(ticker)
+            seen_local.add(ticker)
+
+    return out
+
 
 class MalformedRecommendationError(Exception):
     pass
@@ -90,11 +180,16 @@ def discover_candidates() -> CandidateSet:
     for item in items:
         if len(cs.discover) >= DISCOVER_CAP:
             break
-        related = item.get("related") or ""
-        for raw_t in related.split(","):
+        # Prefer Finnhub's `related` field when present.
+        from_related: list[str] = []
+        for raw_t in (item.get("related") or "").split(","):
             t = raw_t.strip().upper()
-            if not t or not _TICKER_RE.match(t):
-                continue
+            if t and _TICKER_RE.match(t):
+                from_related.append(t)
+        # Fall back to scanning headline+summary against a whitelist when `related` is
+        # empty — Finnhub's general_news("general") endpoint usually omits `related`.
+        candidates = from_related or _extract_text_tickers(item)
+        for t in candidates:
             if t in seen:
                 continue
             cs.discover.append(t)
